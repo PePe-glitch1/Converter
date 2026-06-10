@@ -24,3 +24,5 @@ dependencyResolutionManagement {
 
 rootProject.name = "Converter"
 include(":app")
+include(":data")
+include(":domin")
