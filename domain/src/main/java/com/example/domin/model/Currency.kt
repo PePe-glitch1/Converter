@@ -5,5 +5,5 @@ data class Currency(
     val name: String,
     val code: String,
     val symbol: String,
-    val perDollar: Double,
+    val perToDollar: Double,
 )
