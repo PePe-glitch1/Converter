@@ -1,0 +1,1103 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>БД + Room + API — Курс</title>
+<style>
+:root {
+  --bg: #0d1117; --sidebar-bg: #161b22; --card: #1c2128;
+  --border: #30363d; --text: #e6edf3; --muted: #8b949e;
+  --blue: #58a6ff; --green: #3fb950; --red: #f85149;
+  --yellow: #e3b341; --purple: #bc8cff; --orange: #ffa657;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); display: flex; height: 100vh; overflow: hidden; }
+
+.sidebar { width: 280px; flex-shrink: 0; background: var(--sidebar-bg); border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow-y: auto; }
+.sidebar-header { padding: 22px 18px 16px; border-bottom: 1px solid var(--border); }
+.sidebar-header h1 { font-size: 16px; font-weight: 700; color: var(--blue); }
+.sidebar-header p { font-size: 12px; color: var(--muted); margin-top: 3px; }
+.progress-bar { height: 3px; background: var(--border); border-radius: 2px; margin-top: 10px; }
+.progress-fill { height: 100%; background: var(--blue); border-radius: 2px; transition: width .4s; }
+
+.module-label { font-size: 10px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; color: var(--muted); padding: 14px 18px 4px; }
+.lesson-list { padding: 0 10px 16px; }
+.lesson-item { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 8px; cursor: pointer; margin-bottom: 2px; transition: background .15s; user-select: none; }
+.lesson-item:hover { background: rgba(255,255,255,.05); }
+.lesson-item.active { background: rgba(88,166,255,.1); }
+.lesson-item.active .l-name { color: var(--blue); }
+.l-icon { width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; background: var(--border); color: var(--muted); }
+.l-icon.done { background: var(--green); color: #fff; font-size: 13px; }
+.l-icon.active { background: var(--blue); color: #fff; }
+.l-name { font-size: 13px; line-height: 1.3; }
+.l-tag { font-size: 10px; color: var(--muted); margin-top: 1px; }
+
+.main { flex: 1; overflow-y: auto; padding: 40px 48px 80px; }
+.lesson-title { font-size: 26px; font-weight: 700; margin-bottom: 6px; }
+.lesson-subtitle { color: var(--muted); font-size: 14px; margin-bottom: 30px; }
+
+.section { margin-bottom: 26px; }
+.section h3 { font-size: 15px; font-weight: 700; color: var(--blue); margin-bottom: 8px; }
+.section p, .section li { color: #b8c2cc; line-height: 1.75; font-size: 15px; }
+.section ul { padding-left: 20px; margin-top: 6px; }
+.section li { margin-bottom: 4px; }
+
+.box { border-radius: 10px; padding: 16px 20px; margin: 14px 0; }
+.box-purple { background: rgba(188,140,255,.07); border: 1px solid rgba(188,140,255,.2); }
+.box-blue   { background: rgba(88,166,255,.07);  border: 1px solid rgba(88,166,255,.2); }
+.box-yellow { background: rgba(227,179,65,.07);  border: 1px solid rgba(227,179,65,.2); }
+.box-green  { background: rgba(63,185,80,.07);   border: 1px solid rgba(63,185,80,.2); }
+.box-orange { background: rgba(255,166,87,.07);  border: 1px solid rgba(255,166,87,.2); }
+.box .box-title { font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 7px; }
+.box-purple .box-title { color: var(--purple); }
+.box-blue   .box-title { color: var(--blue); }
+.box-yellow .box-title { color: var(--yellow); }
+.box-green  .box-title { color: var(--green); }
+.box-orange .box-title { color: var(--orange); }
+.box p, .box li { color: #c8cdd4; font-size: 14px; line-height: 1.65; }
+.box ul { padding-left: 18px; margin-top: 4px; }
+.box li { margin-bottom: 3px; }
+
+code { background: rgba(255,255,255,.08); border-radius: 4px; padding: 1px 6px; font-family: 'Courier New', monospace; font-size: 13px; color: #e0a8ff; }
+
+/* annotated code block */
+.acode { background: #161b22; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin: 12px 0; }
+.acode-line { display: flex; border-bottom: 1px solid rgba(255,255,255,.04); }
+.acode-line:last-child { border-bottom: none; }
+.acode-line:hover { background: rgba(255,255,255,.02); }
+.acode-line.hl { background: rgba(88,166,255,.06); }
+.acode-src { padding: 5px 16px; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.7; white-space: pre; flex: 0 0 auto; min-width: 340px; border-right: 1px solid rgba(255,255,255,.06); }
+.acode-note { padding: 5px 14px; font-size: 12px; color: #6e8a9e; line-height: 1.7; align-self: center; font-style: italic; }
+
+.codeblock { background: #161b22; border: 1px solid var(--border); border-radius: 10px; padding: 16px 20px; font-family: 'Courier New', monospace; font-size: 14px; line-height: 1.7; margin: 12px 0; overflow-x: auto; white-space: pre; color: #e6edf3; }
+.kw { color: #ff7b72; } .fn { color: #d2a8ff; } .cm { color: #6e7681; font-style: italic; }
+.str { color: #a5d6ff; } .nm { color: #79c0ff; } .tp { color: #ffa657; } .an { color: #3fb950; }
+
+/* DB table visual */
+.db-table-wrap { margin: 16px 0; overflow-x: auto; }
+.db-table { border-collapse: collapse; font-size: 13px; }
+.db-table th { background: rgba(88,166,255,.15); color: var(--blue); padding: 8px 16px; text-align: left; border: 1px solid var(--border); font-weight: 700; }
+.db-table td { border: 1px solid var(--border); padding: 7px 16px; color: #b8c2cc; font-family: monospace; }
+.db-table tr:nth-child(even) td { background: rgba(255,255,255,.02); }
+.db-table td.pk { color: var(--yellow); font-weight: 700; }
+.db-table td.fk { color: var(--purple); }
+
+/* arch diagram */
+.arch { display: flex; align-items: center; gap: 8px; margin: 16px 0; flex-wrap: wrap; }
+.arch-box { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 10px 16px; font-size: 13px; font-weight: 700; text-align: center; }
+.arch-box.blue   { border-color: var(--blue); color: var(--blue); }
+.arch-box.green  { border-color: var(--green); color: var(--green); }
+.arch-box.purple { border-color: var(--purple); color: var(--purple); }
+.arch-box.yellow { border-color: var(--yellow); color: var(--yellow); }
+.arch-box.orange { border-color: var(--orange); color: var(--orange); }
+.arch-box small  { display: block; font-size: 10px; font-weight: 400; color: var(--muted); margin-top: 2px; }
+.arch-arrow { color: var(--muted); font-size: 18px; }
+
+.step-table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 13px; }
+.step-table th { background: rgba(255,255,255,.05); color: var(--muted); padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--border); font-weight: 600; }
+.step-table td { padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,.04); color: #b8c2cc; }
+.step-table tr:last-child td { border-bottom: none; }
+
+.next-wrap { margin-top: 36px; display: flex; justify-content: flex-end; }
+.btn-next { background: var(--blue); color: #000; border: none; padding: 10px 24px; border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer; }
+.btn-next:hover { opacity: .85; }
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sidebar-header">
+    <h1>БД + Room + API</h1>
+    <p id="prog-text">0 з 16 уроків пройдено</p>
+    <div class="progress-bar"><div class="progress-fill" id="prog-fill" style="width:0%"></div></div>
+  </div>
+  <div id="lesson-list"></div>
+</aside>
+
+<div class="main" id="main"></div>
+
+<script>
+const MODULES = [
+  { label: "Модуль 1 — Теорія БД", color: "blue" },
+  { label: "Модуль 2 — Room", color: "green" },
+  { label: "Модуль 3 — API (Retrofit)", color: "purple" },
+];
+
+const LESSONS = [
+// ═══════════════════════════════════════════════════════ MODULE 1
+{
+  id:1, mod:0, title:"Що таке база даних і навіщо", tag:"Теорія",
+  content:`
+<h1 class="lesson-title">Що таке база даних і навіщо вона потрібна</h1>
+<p class="lesson-subtitle">Починаємо з нуля — розберемо саму ідею</p>
+
+<div class="section">
+  <h3>Проблема без бази даних</h3>
+  <p>Уяви додаток нотаток. Ти написав нотатку, закрив додаток — і вона зникла. Тому що вона зберігалась у звичайній змінній в пам'яті, яка очищується при закритті.</p>
+  <div class="box box-yellow">
+    <div class="box-title">Проблема</div>
+    <p>RAM (оперативна пам'ять) — тимчасова. Після закриття додатку або перезавантаження телефону — всі дані зникають.</p>
+  </div>
+  <p>Потрібне місце де дані зберігаються <strong>постійно</strong>. Це і є база даних.</p>
+</div>
+
+<div class="section">
+  <h3>База даних = організоване сховище</h3>
+  <p>База даних — це файл на диску телефону, в якому дані зберігаються у вигляді таблиць. Схоже на Excel, але для коду.</p>
+  <div class="box box-blue">
+    <div class="box-title">Аналогія</div>
+    <p>Excel файл = база даних<br>
+    Лист в Excel = таблиця<br>
+    Рядок = один запис (одна нотатка, один користувач)<br>
+    Стовпець = поле (назва, текст, дата)</p>
+  </div>
+</div>
+
+<div class="section">
+  <h3>SQLite та Room</h3>
+  <p>На Android вбудована база даних називається <strong>SQLite</strong>. Вона зберігається прямо на телефоні як файл.</p>
+  <p><strong>Room</strong> — це бібліотека від Google яка дає зручний спосіб працювати з SQLite через Kotlin код, замість того щоб писати SQL запити вручну.</p>
+  <div class="arch">
+    <div class="arch-box blue">Твій Kotlin код<small>Entity, DAO</small></div>
+    <div class="arch-arrow">→</div>
+    <div class="arch-box green">Room<small>ORM бібліотека</small></div>
+    <div class="arch-arrow">→</div>
+    <div class="arch-box yellow">SQLite<small>файл на диску</small></div>
+  </div>
+  <div class="box box-green">
+    <div class="box-title">ORM — Object Relational Mapping</div>
+    <p>Room перетворює твої Kotlin класи (об'єкти) в рядки таблиці і навпаки. Ти пишеш Kotlin — Room генерує SQL.</p>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Коли використовувати</h3>
+  <table class="step-table">
+    <tr><th>Ситуація</th><th>Рішення</th></tr>
+    <tr><td>Зберегти налаштування (тема, мова)</td><td>DataStore / SharedPreferences</td></tr>
+    <tr><td>Зберегти список об'єктів (нотатки, контакти)</td><td>Room ✓</td></tr>
+    <tr><td>Кешувати дані з інтернету</td><td>Room ✓</td></tr>
+    <tr><td>Дані тільки на час сесії</td><td>Змінна в пам'яті</td></tr>
+  </table>
+</div>
+`},
+
+{
+  id:2, mod:0, title:"Таблиця, рядок, стовпець", tag:"Теорія",
+  content:`
+<h1 class="lesson-title">Таблиця, рядок, стовпець</h1>
+<p class="lesson-subtitle">Як дані організовані всередині бази</p>
+
+<div class="section">
+  <h3>Структура таблиці</h3>
+  <p>Кожна таблиця має назву і набір стовпців. Кожен рядок — це один запис.</p>
+  <p>Наприклад, таблиця <code>notes</code>:</p>
+  <div class="db-table-wrap">
+    <table class="db-table">
+      <tr><th>id</th><th>title</th><th>content</th><th>created_at</th></tr>
+      <tr><td class="pk">1</td><td>Покупки</td><td>Молоко, хліб</td><td>2024-01-15</td></tr>
+      <tr><td class="pk">2</td><td>Ідеї</td><td>Зробити додаток</td><td>2024-01-16</td></tr>
+      <tr><td class="pk">3</td><td>TODO</td><td>Вчити Kotlin</td><td>2024-01-17</td></tr>
+    </table>
+  </div>
+  <div class="box box-blue">
+    <div class="box-title">Що є що</div>
+    <ul>
+      <li><strong>Таблиця</strong> (<code>notes</code>) — вся сітка даних</li>
+      <li><strong>Стовпець</strong> (<code>id</code>, <code>title</code>, ...) — тип інформації</li>
+      <li><strong>Рядок</strong> — один конкретний запис</li>
+    </ul>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Типи даних стовпців</h3>
+  <table class="step-table">
+    <tr><th>SQL тип</th><th>Kotlin тип</th><th>Для чого</th></tr>
+    <tr><td><code>INTEGER</code></td><td><code>Int / Long</code></td><td>Числа, id, лічильники</td></tr>
+    <tr><td><code>TEXT</code></td><td><code>String</code></td><td>Текст, назви</td></tr>
+    <tr><td><code>REAL</code></td><td><code>Double / Float</code></td><td>Дробові числа</td></tr>
+    <tr><td><code>INTEGER</code></td><td><code>Boolean</code></td><td>true/false (0 або 1)</td></tr>
+  </table>
+</div>
+
+<div class="section">
+  <h3>Кілька таблиць в одній БД</h3>
+  <p>Одна база даних може мати багато таблиць. Наприклад в застосунку задач:</p>
+  <div class="arch">
+    <div class="arch-box blue">users<small>id, name, email</small></div>
+    <div class="arch-arrow">+</div>
+    <div class="arch-box green">tasks<small>id, title, user_id</small></div>
+    <div class="arch-arrow">+</div>
+    <div class="arch-box purple">categories<small>id, name, color</small></div>
+  </div>
+  <p>Таблиці пов'язані між собою через ключі — це розберемо в уроці 4.</p>
+</div>
+`},
+
+{
+  id:3, mod:0, title:"Primary Key", tag:"Теорія",
+  content:`
+<h1 class="lesson-title">Primary Key — унікальний ідентифікатор</h1>
+<p class="lesson-subtitle">Як БД розрізняє рядки між собою</p>
+
+<div class="section">
+  <h3>Проблема дублікатів</h3>
+  <p>Уяви таблицю без id:</p>
+  <div class="db-table-wrap">
+    <table class="db-table">
+      <tr><th>title</th><th>content</th></tr>
+      <tr><td>Покупки</td><td>Молоко</td></tr>
+      <tr><td>Покупки</td><td>Хліб</td></tr>
+    </table>
+  </div>
+  <p>Як видалити тільки першу "Покупки"? Як оновити тільки другу? БД не знає який рядок ти маєш на увазі.</p>
+</div>
+
+<div class="section">
+  <h3>Primary Key — рішення</h3>
+  <p>Primary Key (PK) — стовпець який <strong>унікально ідентифікує кожен рядок</strong>. Два рядки не можуть мати однаковий PK.</p>
+  <div class="db-table-wrap">
+    <table class="db-table">
+      <tr><th>id (PK)</th><th>title</th><th>content</th></tr>
+      <tr><td class="pk">1</td><td>Покупки</td><td>Молоко</td></tr>
+      <tr><td class="pk">2</td><td>Покупки</td><td>Хліб</td></tr>
+      <tr><td class="pk">3</td><td>TODO</td><td>Вчити Kotlin</td></tr>
+    </table>
+  </div>
+  <p>Тепер "видалити рядок з id=1" — однозначна команда.</p>
+  <div class="box box-yellow">
+    <div class="box-title">autoGenerate</div>
+    <p>Зазвичай id генерується автоматично — БД сама призначає наступне число. Ти не вказуєш id вручну при створенні запису.</p>
+  </div>
+</div>
+
+<div class="section">
+  <h3>В Kotlin / Room</h3>
+  <div class="acode">
+    <div class="acode-line hl"><div class="acode-src"><span class="an">@PrimaryKey</span>(autoGenerate = <span class="kw">true</span>)</div><div class="acode-note">← ця змінна = primary key, значення генерується автоматично</div></div>
+    <div class="acode-line"><div class="acode-src"><span class="kw">val</span> id: <span class="tp">Int</span> = <span class="nm">0</span></div><div class="acode-note">← початкове значення 0, Room замінить його на реальний id</div></div>
+  </div>
+  <div class="box box-purple">
+    <div class="box-title">Чому id = 0?</div>
+    <p>Коли <code>autoGenerate = true</code> і id = 0 — Room розуміє що треба сгенерувати новий id. Якщо передати конкретне число — Room використає його (або поверне помилку якщо таке вже є).</p>
+  </div>
+</div>
+`},
+
+{
+  id:4, mod:0, title:"Зв'язки між таблицями", tag:"Теорія",
+  content:`
+<h1 class="lesson-title">Зв'язки між таблицями</h1>
+<p class="lesson-subtitle">Як таблиці посилаються одна на одну</p>
+
+<div class="section">
+  <h3>Навіщо зв'язки</h3>
+  <p>Уяви застосунок де є користувачі і їхні нотатки. Можна все зберегти в одній таблиці:</p>
+  <div class="db-table-wrap">
+    <table class="db-table">
+      <tr><th>note_id</th><th>note_title</th><th>user_name</th><th>user_email</th></tr>
+      <tr><td class="pk">1</td><td>Покупки</td><td>Данил</td><td>d@gmail.com</td></tr>
+      <tr><td class="pk">2</td><td>TODO</td><td>Данил</td><td>d@gmail.com</td></tr>
+      <tr><td class="pk">3</td><td>Ідеї</td><td>Олег</td><td>o@gmail.com</td></tr>
+    </table>
+  </div>
+  <p>Проблема: дані Данила дублюються в кожному рядку. Якщо він змінить email — треба оновити всі рядки.</p>
+</div>
+
+<div class="section">
+  <h3>Рішення: дві таблиці + Foreign Key</h3>
+  <div class="db-table-wrap">
+    <table class="db-table">
+      <tr><th colspan="3">users</th></tr>
+      <tr><th>id (PK)</th><th>name</th><th>email</th></tr>
+      <tr><td class="pk">1</td><td>Данил</td><td>d@gmail.com</td></tr>
+      <tr><td class="pk">2</td><td>Олег</td><td>o@gmail.com</td></tr>
+    </table>
+  </div>
+  <div class="db-table-wrap" style="margin-top:10px">
+    <table class="db-table">
+      <tr><th colspan="3">notes</th></tr>
+      <tr><th>id (PK)</th><th>title</th><th>user_id (FK)</th></tr>
+      <tr><td class="pk">1</td><td>Покупки</td><td class="fk">1</td></tr>
+      <tr><td class="pk">2</td><td>TODO</td><td class="fk">1</td></tr>
+      <tr><td class="pk">3</td><td>Ідеї</td><td class="fk">2</td></tr>
+    </table>
+  </div>
+  <div class="box box-purple">
+    <div class="box-title">Foreign Key (FK)</div>
+    <p><code>user_id</code> в таблиці <code>notes</code> — це посилання на <code>id</code> в таблиці <code>users</code>.<br>
+    Нотатка з <code>user_id = 1</code> належить Данилу. Якщо Данил змінить email — міняємо тільки в <code>users</code>.</p>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Типи зв'язків</h3>
+  <table class="step-table">
+    <tr><th>Тип</th><th>Приклад</th><th>Як реалізується</th></tr>
+    <tr><td>One-to-Many</td><td>1 user → багато notes</td><td>FK в дочірній таблиці</td></tr>
+    <tr><td>Many-to-Many</td><td>студенти ↔ курси</td><td>Проміжна таблиця</td></tr>
+    <tr><td>One-to-One</td><td>1 user → 1 profile</td><td>FK з UNIQUE</td></tr>
+  </table>
+  <p>У Room всі ці зв'язки реалізуються через <code>@Relation</code> — розберемо в уроці 10.</p>
+</div>
+`},
+
+// ═══════════════════════════════════════════════════════ MODULE 2
+{
+  id:5, mod:1, title:"Що таке Room і три компоненти", tag:"Room",
+  content:`
+<h1 class="lesson-title">Що таке Room і три компоненти</h1>
+<p class="lesson-subtitle">Архітектура Room перед тим як писати код</p>
+
+<div class="section">
+  <h3>Три компоненти Room</h3>
+  <p>Room складається рівно з трьох частин. Без розуміння цієї структури код буде незрозумілим.</p>
+  <div class="arch">
+    <div class="arch-box blue">Entity<small>= таблиця</small></div>
+    <div class="arch-arrow">+</div>
+    <div class="arch-box green">DAO<small>= запити</small></div>
+    <div class="arch-arrow">+</div>
+    <div class="arch-box purple">Database<small>= точка входу</small></div>
+  </div>
+
+  <div class="box box-blue">
+    <div class="box-title">Entity</div>
+    <p>Kotlin data class з анотацією <code>@Entity</code>. Описує <strong>структуру таблиці</strong> — які стовпці є, якого типу, хто primary key.</p>
+  </div>
+  <div class="box box-green">
+    <div class="box-title">DAO — Data Access Object</div>
+    <p>Interface з анотацією <code>@Dao</code>. Містить функції для роботи з даними: додати, отримати, видалити, оновити. Room генерує реалізацію автоматично.</p>
+  </div>
+  <div class="box box-purple">
+    <div class="box-title">Database</div>
+    <p>Abstract клас з анотацією <code>@Database</code>. Зв'язує Entity і DAO разом. Це точка входу до бази — звідси отримуєш DAO.</p>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Як це виглядає в проекті</h3>
+  <div class="codeblock">data/
+  db/
+    NoteEntity.kt        <span class="cm">← Entity</span>
+    NoteDao.kt           <span class="cm">← DAO</span>
+    AppDatabase.kt       <span class="cm">← Database</span></div>
+</div>
+
+<div class="section">
+  <h3>Залежності в build.gradle</h3>
+  <div class="codeblock"><span class="cm">// build.gradle.kts (app)</span>
+<span class="kw">val</span> roomVersion = <span class="str">"2.6.1"</span>
+
+implementation(<span class="str">"androidx.room:room-runtime:\$roomVersion"</span>)
+implementation(<span class="str">"androidx.room:room-ktx:\$roomVersion"</span>)    <span class="cm">// Flow + coroutines</span>
+ksp(<span class="str">"androidx.room:room-compiler:\$roomVersion"</span>)          <span class="cm">// генерує код</span></div>
+  <div class="box box-yellow">
+    <div class="box-title">ksp замість kapt</div>
+    <p><code>ksp</code> (Kotlin Symbol Processing) — сучасна заміна <code>kapt</code>. Швидша компіляція. Для неї потрібен плагін <code>com.google.devtools.ksp</code> в plugins блоці.</p>
+  </div>
+</div>
+`},
+
+{
+  id:6, mod:1, title:"Entity — опис таблиці", tag:"Room",
+  content:`
+<h1 class="lesson-title">Entity — опис таблиці</h1>
+<p class="lesson-subtitle">Kotlin клас = таблиця в базі даних</p>
+
+<div class="section">
+  <h3>Повний приклад Entity</h3>
+  <div class="acode">
+    <div class="acode-line"><div class="acode-src"><span class="an">@Entity</span>(tableName = <span class="str">"notes"</span>)</div><div class="acode-note">← говоримо Room: цей клас = таблиця "notes"</div></div>
+    <div class="acode-line"><div class="acode-src"><span class="kw">data class</span> <span class="tp">NoteEntity</span>(</div><div class="acode-note">← data class бо Room потребує equals/hashCode</div></div>
+    <div class="acode-line hl"><div class="acode-src">    <span class="an">@PrimaryKey</span>(autoGenerate = <span class="kw">true</span>)</div><div class="acode-note">← цей стовпець = PK, значення генерується само</div></div>
+    <div class="acode-line"><div class="acode-src">    <span class="kw">val</span> id: <span class="tp">Int</span> = <span class="nm">0</span>,</div><div class="acode-note">← 0 означає "ще не має id", Room замінить</div></div>
+    <div class="acode-line"><div class="acode-src">    <span class="an">@ColumnInfo</span>(name = <span class="str">"title"</span>)</div><div class="acode-note">← назва стовпця в БД (можна не писати якщо = назві поля)</div></div>
+    <div class="acode-line"><div class="acode-src">    <span class="kw">val</span> title: <span class="tp">String</span>,</div><div class="acode-note">← TEXT стовпець в БД</div></div>
+    <div class="acode-line"><div class="acode-src">    <span class="kw">val</span> content: <span class="tp">String</span>,</div><div class="acode-note">← @ColumnInfo можна пропустити — Room візьме назву поля</div></div>
+    <div class="acode-line"><div class="acode-src">    <span class="kw">val</span> createdAt: <span class="tp">Long</span> = System.currentTimeMillis()</div><div class="acode-note">← час в мілісекундах, зберігається як INTEGER</div></div>
+    <div class="acode-line"><div class="acode-src">)</div><div class="acode-note"></div></div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Що Room згенерує в БД</h3>
+  <div class="db-table-wrap">
+    <table class="db-table">
+      <tr><th>id (PK)</th><th>title</th><th>content</th><th>createdAt</th></tr>
+      <tr><td class="pk">INTEGER</td><td>TEXT</td><td>TEXT</td><td>INTEGER</td></tr>
+    </table>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Nullable поля</h3>
+  <div class="acode">
+    <div class="acode-line"><div class="acode-src"><span class="kw">val</span> description: <span class="tp">String?</span> = <span class="kw">null</span></div><div class="acode-note">← ? означає що поле може бути null (порожнє в БД)</div></div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Ігнорувати поле</h3>
+  <div class="acode">
+    <div class="acode-line"><div class="acode-src"><span class="an">@Ignore</span></div><div class="acode-note">← це поле НЕ буде стовпцем в таблиці</div></div>
+    <div class="acode-line"><div class="acode-src"><span class="kw">val</span> isSelected: <span class="tp">Boolean</span> = <span class="kw">false</span></div><div class="acode-note">← потрібне тільки в UI, не в БД</div></div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Важливо</h3>
+  <div class="box box-yellow">
+    <div class="box-title">Entity = тільки структура даних</div>
+    <p>В Entity не повинно бути ніякої логіки — тільки поля. Ніяких функцій, ніякого бізнес-коду. Це просто опис таблиці.</p>
+  </div>
+</div>
+`},
+
+{
+  id:7, mod:1, title:"DAO — запити до бази", tag:"Room",
+  content:`
+<h1 class="lesson-title">DAO — Data Access Object</h1>
+<p class="lesson-subtitle">Всі операції з базою через один interface</p>
+
+<div class="section">
+  <h3>Повний приклад DAO</h3>
+  <div class="acode">
+    <div class="acode-line"><div class="acode-src"><span class="an">@Dao</span></div><div class="acode-note">← говоримо Room: цей interface = набір запитів</div></div>
+    <div class="acode-line"><div class="acode-src"><span class="kw">interface</span> <span class="tp">NoteDao</span> {</div><div class="acode-note">← interface, не клас — Room згенерує реалізацію</div></div>
+    <div class="acode-line" style="height:8px"><div class="acode-src"></div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src">    <span class="an">@Query</span>(<span class="str">"SELECT * FROM notes ORDER BY createdAt DESC"</span>)</div><div class="acode-note">← SQL запит: вибери всі рядки, сортуй за датою</div></div>
+    <div class="acode-line hl"><div class="acode-src">    <span class="kw">fun</span> <span class="fn">getAllNotes</span>(): <span class="tp">Flow</span>&lt;<span class="tp">List</span>&lt;<span class="tp">NoteEntity</span>&gt;&gt;</div><div class="acode-note">← Flow = живий потік, автооновлення при змінах в БД</div></div>
+    <div class="acode-line" style="height:8px"><div class="acode-src"></div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src">    <span class="an">@Query</span>(<span class="str">"SELECT * FROM notes WHERE id = :noteId"</span>)</div><div class="acode-note">← :noteId = параметр функції підставляється в запит</div></div>
+    <div class="acode-line"><div class="acode-src">    <span class="kw">suspend fun</span> <span class="fn">getNoteById</span>(noteId: <span class="tp">Int</span>): <span class="tp">NoteEntity?</span></div><div class="acode-note">← suspend = виконується в coroutine, не блокує UI</div></div>
+    <div class="acode-line" style="height:8px"><div class="acode-src"></div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src">    <span class="an">@Insert</span>(onConflict = OnConflictStrategy.REPLACE)</div><div class="acode-note">← якщо є запис з таким id — замінити його</div></div>
+    <div class="acode-line"><div class="acode-src">    <span class="kw">suspend fun</span> <span class="fn">insertNote</span>(note: <span class="tp">NoteEntity</span>)</div><div class="acode-note">← додати нотатку. SQL генерується автоматично</div></div>
+    <div class="acode-line" style="height:8px"><div class="acode-src"></div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src">    <span class="an">@Update</span></div><div class="acode-note">← UPDATE за id об'єкту</div></div>
+    <div class="acode-line"><div class="acode-src">    <span class="kw">suspend fun</span> <span class="fn">updateNote</span>(note: <span class="tp">NoteEntity</span>)</div><div class="acode-note">← знаходить рядок за id і оновлює поля</div></div>
+    <div class="acode-line" style="height:8px"><div class="acode-src"></div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src">    <span class="an">@Delete</span></div><div class="acode-note">← DELETE за id об'єкту</div></div>
+    <div class="acode-line"><div class="acode-src">    <span class="kw">suspend fun</span> <span class="fn">deleteNote</span>(note: <span class="tp">NoteEntity</span>)</div><div class="acode-note">← видалити цей запис з БД</div></div>
+    <div class="acode-line"><div class="acode-src">}</div><div class="acode-note"></div></div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>suspend vs Flow</h3>
+  <table class="step-table">
+    <tr><th></th><th>suspend fun</th><th>fun ... : Flow</th></tr>
+    <tr><td>Коли</td><td>Одноразова дія (insert, delete)</td><td>Читання що має оновлюватись</td></tr>
+    <tr><td>Результат</td><td>Повертає один раз і все</td><td>Повертає щоразу при зміні БД</td></tr>
+    <tr><td>Приклад</td><td>deleteNote(note)</td><td>getAllNotes()</td></tr>
+  </table>
+  <div class="box box-green">
+    <div class="box-title">Чому Flow для списків?</div>
+    <p>Якщо хтось додав нотатку — твій UI автоматично оновиться без жодного додаткового коду. Flow сам повідомить про зміни.</p>
+  </div>
+</div>
+
+<div class="section">
+  <h3>@Query з параметрами</h3>
+  <div class="acode">
+    <div class="acode-line"><div class="acode-src"><span class="an">@Query</span>(<span class="str">"SELECT * FROM notes WHERE title LIKE '%' || :search || '%'"</span>)</div><div class="acode-note">← пошук по тексту, :search = параметр</div></div>
+    <div class="acode-line"><div class="acode-src"><span class="kw">fun</span> <span class="fn">searchNotes</span>(search: <span class="tp">String</span>): <span class="tp">Flow</span>&lt;<span class="tp">List</span>&lt;<span class="tp">NoteEntity</span>&gt;&gt;</div><div class="acode-note"></div></div>
+  </div>
+</div>
+`},
+
+{
+  id:8, mod:1, title:"Database клас", tag:"Room",
+  content:`
+<h1 class="lesson-title">Database клас — точка входу</h1>
+<p class="lesson-subtitle">Зв'язуємо Entity і DAO разом</p>
+
+<div class="section">
+  <h3>Повний приклад</h3>
+  <div class="acode">
+    <div class="acode-line"><div class="acode-src"><span class="an">@Database</span>(</div><div class="acode-note">← говоримо Room: це головний клас бази</div></div>
+    <div class="acode-line"><div class="acode-src">    entities = [<span class="tp">NoteEntity</span>::<span class="kw">class</span>],</div><div class="acode-note">← перерахуй всі Entity (таблиці) цієї БД</div></div>
+    <div class="acode-line hl"><div class="acode-src">    version = <span class="nm">1</span>,</div><div class="acode-note">← версія схеми. При зміні структури — збільшуй</div></div>
+    <div class="acode-line"><div class="acode-src">    exportSchema = <span class="kw">false</span></div><div class="acode-note">← не зберігати схему в файл (для простих проектів)</div></div>
+    <div class="acode-line"><div class="acode-src">)</div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src"><span class="kw">abstract class</span> <span class="tp">AppDatabase</span> : <span class="tp">RoomDatabase</span>() {</div><div class="acode-note">← abstract клас — Room генерує реалізацію</div></div>
+    <div class="acode-line"><div class="acode-src">    <span class="kw">abstract fun</span> <span class="fn">noteDao</span>(): <span class="tp">NoteDao</span></div><div class="acode-note">← через цю функцію отримуємо DAO</div></div>
+    <div class="acode-line" style="height:8px"><div class="acode-src"></div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src">    <span class="kw">companion object</span> {</div><div class="acode-note">← статичні поля/методи (як static в Java)</div></div>
+    <div class="acode-line"><div class="acode-src">        <span class="an">@Volatile</span></div><div class="acode-note">← всі потоки бачать останнє значення (thread-safe)</div></div>
+    <div class="acode-line"><div class="acode-src">        <span class="kw">private var</span> INSTANCE: <span class="tp">AppDatabase?</span> = <span class="kw">null</span></div><div class="acode-note">← єдиний екземпляр (Singleton)</div></div>
+    <div class="acode-line" style="height:8px"><div class="acode-src"></div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src">        <span class="kw">fun</span> <span class="fn">getInstance</span>(context: <span class="tp">Context</span>): <span class="tp">AppDatabase</span> {</div><div class="acode-note">← отримати або створити БД</div></div>
+    <div class="acode-line"><div class="acode-src">            <span class="kw">return</span> INSTANCE ?: synchronized(<span class="kw">this</span>) {</div><div class="acode-note">← якщо вже є — повернути, якщо нема — створити</div></div>
+    <div class="acode-line"><div class="acode-src">                Room.databaseBuilder(</div><div class="acode-note">← будуємо базу даних</div></div>
+    <div class="acode-line"><div class="acode-src">                    context.applicationContext,</div><div class="acode-note">← applicationContext щоб не витікала пам'ять</div></div>
+    <div class="acode-line"><div class="acode-src">                    <span class="tp">AppDatabase</span>::<span class="kw">class</span>.java,</div><div class="acode-note">← клас бази</div></div>
+    <div class="acode-line hl"><div class="acode-src">                    <span class="str">"app_database.db"</span></div><div class="acode-note">← ім'я файлу на диску телефону</div></div>
+    <div class="acode-line"><div class="acode-src">                ).build().also { INSTANCE = it }</div><div class="acode-note">← зберігаємо в INSTANCE і повертаємо</div></div>
+    <div class="acode-line"><div class="acode-src">            }</div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src">        }</div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src">    }</div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src">}</div><div class="acode-note"></div></div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Навіщо Singleton?</h3>
+  <div class="box box-yellow">
+    <div class="box-title">Чому не створювати нову БД кожного разу</div>
+    <p>Відкриття бази — дорога операція. Якщо кожен ViewModel буде створювати нову копію — додаток буде повільним і можуть бути конфлікти при одночасному записі. Singleton гарантує що є рівно одне підключення.</p>
+  </div>
+</div>
+
+<div class="section">
+  <h3>З Hilt (як у твоєму проекті)</h3>
+  <p>З Hilt не треба писати Singleton вручну — Hilt сам керує lifecycle:</p>
+  <div class="acode">
+    <div class="acode-line"><div class="acode-src"><span class="an">@Module</span></div><div class="acode-note">← цей клас = постачальник залежностей</div></div>
+    <div class="acode-line"><div class="acode-src"><span class="an">@InstallIn</span>(<span class="tp">SingletonComponent</span>::<span class="kw">class</span>)</div><div class="acode-note">← живе стільки ж скільки весь додаток</div></div>
+    <div class="acode-line"><div class="acode-src"><span class="kw">object</span> <span class="tp">DatabaseModule</span> {</div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src">    <span class="an">@Singleton</span></div><div class="acode-note">← один екземпляр на весь додаток</div></div>
+    <div class="acode-line"><div class="acode-src">    <span class="an">@Provides</span></div><div class="acode-note">← Hilt використає цю функцію щоб створити залежність</div></div>
+    <div class="acode-line"><div class="acode-src">    <span class="kw">fun</span> <span class="fn">provideDatabase</span>(<span class="an">@ApplicationContext</span> ctx: <span class="tp">Context</span>) =</div><div class="acode-note">← Hilt сам передасть context</div></div>
+    <div class="acode-line hl"><div class="acode-src">        Room.databaseBuilder(ctx, <span class="tp">AppDatabase</span>::<span class="kw">class</span>.java, <span class="str">"app.db"</span>).build()</div><div class="acode-note">← просто будуємо, Singleton вже забезпечив Hilt</div></div>
+    <div class="acode-line" style="height:8px"><div class="acode-src"></div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src">    <span class="an">@Singleton</span> <span class="an">@Provides</span></div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src">    <span class="kw">fun</span> <span class="fn">provideNoteDao</span>(db: <span class="tp">AppDatabase</span>) = db.noteDao()</div><div class="acode-note">← окремо надаємо DAO щоб інжектити напряму</div></div>
+    <div class="acode-line"><div class="acode-src">}</div><div class="acode-note"></div></div>
+  </div>
+</div>
+`},
+
+{
+  id:9, mod:1, title:"Repository + ViewModel", tag:"Room",
+  content:`
+<h1 class="lesson-title">Repository + ViewModel</h1>
+<p class="lesson-subtitle">Як правильно з'єднати Room з UI</p>
+
+<div class="section">
+  <h3>Архітектура шарів</h3>
+  <div class="arch">
+    <div class="arch-box blue">UI (Composable)<small>показує дані</small></div>
+    <div class="arch-arrow">↕</div>
+    <div class="arch-box green">ViewModel<small>логіка UI</small></div>
+    <div class="arch-arrow">↕</div>
+    <div class="arch-box purple">Repository<small>джерело даних</small></div>
+    <div class="arch-arrow">↕</div>
+    <div class="arch-box yellow">DAO<small>запити до БД</small></div>
+  </div>
+  <div class="box box-blue">
+    <div class="box-title">Навіщо Repository?</div>
+    <p>ViewModel не повинен знати звідки дані — з БД, з API, чи з кешу. Repository вирішує це і повертає дані. Якщо завтра додасиш API — ViewModel не зміниться.</p>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Repository</h3>
+  <div class="acode">
+    <div class="acode-line"><div class="acode-src"><span class="kw">class</span> <span class="tp">NoteRepository</span> <span class="an">@Inject</span> <span class="kw">constructor</span>(</div><div class="acode-note">← @Inject — Hilt знає як створити цей клас</div></div>
+    <div class="acode-line"><div class="acode-src">    <span class="kw">private val</span> noteDao: <span class="tp">NoteDao</span></div><div class="acode-note">← Hilt сам передасть DAO</div></div>
+    <div class="acode-line"><div class="acode-src">) {</div><div class="acode-note"></div></div>
+    <div class="acode-line" style="height:8px"><div class="acode-src"></div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src">    <span class="kw">val</span> allNotes = noteDao.getAllNotes()</div><div class="acode-note">← Flow з DAO. Автооновлюється при змінах в БД</div></div>
+    <div class="acode-line" style="height:8px"><div class="acode-src"></div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src">    <span class="kw">suspend fun</span> <span class="fn">insert</span>(note: <span class="tp">NoteEntity</span>) = noteDao.insertNote(note)</div><div class="acode-note">← делегуємо в DAO</div></div>
+    <div class="acode-line"><div class="acode-src">    <span class="kw">suspend fun</span> <span class="fn">delete</span>(note: <span class="tp">NoteEntity</span>) = noteDao.deleteNote(note)</div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src">}</div><div class="acode-note"></div></div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>ViewModel</h3>
+  <div class="acode">
+    <div class="acode-line"><div class="acode-src"><span class="an">@HiltViewModel</span></div><div class="acode-note">← Hilt знає як створити цей ViewModel</div></div>
+    <div class="acode-line"><div class="acode-src"><span class="kw">class</span> <span class="tp">NoteViewModel</span> <span class="an">@Inject</span> <span class="kw">constructor</span>(</div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src">    <span class="kw">private val</span> repository: <span class="tp">NoteRepository</span></div><div class="acode-note">← Hilt передасть Repository</div></div>
+    <div class="acode-line"><div class="acode-src">) : <span class="tp">ViewModel</span>() {</div><div class="acode-note"></div></div>
+    <div class="acode-line" style="height:8px"><div class="acode-src"></div><div class="acode-note"></div></div>
+    <div class="acode-line hl"><div class="acode-src">    <span class="kw">val</span> notes = repository.allNotes.stateIn(</div><div class="acode-note">← конвертуємо Flow в StateFlow для UI</div></div>
+    <div class="acode-line"><div class="acode-src">        scope = viewModelScope,</div><div class="acode-note">← скасується автоматично при знищенні ViewModel</div></div>
+    <div class="acode-line"><div class="acode-src">        started = SharingStarted.WhileSubscribed(<span class="nm">5000</span>),</div><div class="acode-note">← зупинити через 5с після того як немає підписників</div></div>
+    <div class="acode-line"><div class="acode-src">        initialValue = emptyList()</div><div class="acode-note">← початкове значення поки БД не відповіла</div></div>
+    <div class="acode-line"><div class="acode-src">    )</div><div class="acode-note"></div></div>
+    <div class="acode-line" style="height:8px"><div class="acode-src"></div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src">    <span class="kw">fun</span> <span class="fn">addNote</span>(title: <span class="tp">String</span>, content: <span class="tp">String</span>) {</div><div class="acode-note">← звичайна fun, не suspend — UI не знає про coroutines</div></div>
+    <div class="acode-line"><div class="acode-src">        viewModelScope.launch {</div><div class="acode-note">← запускаємо coroutine в scope ViewModel</div></div>
+    <div class="acode-line"><div class="acode-src">            repository.insert(<span class="tp">NoteEntity</span>(title = title, content = content))</div><div class="acode-note">← suspend функція всередині launch — ОК</div></div>
+    <div class="acode-line"><div class="acode-src">        }</div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src">    }</div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src">}</div><div class="acode-note"></div></div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Збираємо в UI (Compose)</h3>
+  <div class="acode">
+    <div class="acode-line"><div class="acode-src"><span class="kw">val</span> notes <span class="kw">by</span> viewModel.notes.collectAsStateWithLifecycle()</div><div class="acode-note">← підписуємось на StateFlow, авто-recompose при змінах</div></div>
+  </div>
+</div>
+`},
+
+{
+  id:10, mod:1, title:"Зв'язки в Room (@Relation)", tag:"Room",
+  content:`
+<h1 class="lesson-title">Зв'язки в Room</h1>
+<p class="lesson-subtitle">One-to-Many через @Relation</p>
+
+<div class="section">
+  <h3>Задача</h3>
+  <p>Є два Entity: <code>UserEntity</code> і <code>NoteEntity</code>. Один user має багато notes. Хочемо отримати user разом з усіма його нотатками.</p>
+</div>
+
+<div class="section">
+  <h3>Entity з Foreign Key</h3>
+  <div class="acode">
+    <div class="acode-line"><div class="acode-src"><span class="an">@Entity</span>(tableName = <span class="str">"notes"</span>,</div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src">    foreignKeys = [<span class="tp">ForeignKey</span>(</div><div class="acode-note">← оголошуємо зв'язок</div></div>
+    <div class="acode-line"><div class="acode-src">        entity = <span class="tp">UserEntity</span>::<span class="kw">class</span>,</div><div class="acode-note">← батьківська таблиця</div></div>
+    <div class="acode-line"><div class="acode-src">        parentColumns = [<span class="str">"id"</span>],</div><div class="acode-note">← PK батьківської таблиці</div></div>
+    <div class="acode-line hl"><div class="acode-src">        childColumns = [<span class="str">"userId"</span>],</div><div class="acode-note">← FK в цій таблиці</div></div>
+    <div class="acode-line"><div class="acode-src">        onDelete = <span class="tp">ForeignKey</span>.CASCADE</div><div class="acode-note">← видалити user → видалити всі його нотатки</div></div>
+    <div class="acode-line"><div class="acode-src">    )]</div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src">)</div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src"><span class="kw">data class</span> <span class="tp">NoteEntity</span>(</div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src">    <span class="an">@PrimaryKey</span>(autoGenerate = <span class="kw">true</span>) <span class="kw">val</span> id: <span class="tp">Int</span> = <span class="nm">0</span>,</div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src">    <span class="kw">val</span> title: <span class="tp">String</span>,</div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src">    <span class="an">@ColumnInfo</span>(index = <span class="kw">true</span>) <span class="kw">val</span> userId: <span class="tp">Int</span></div><div class="acode-note">← index = true прискорює пошук по цьому полю</div></div>
+    <div class="acode-line"><div class="acode-src">)</div><div class="acode-note"></div></div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Data class для результату</h3>
+  <div class="acode">
+    <div class="acode-line"><div class="acode-src"><span class="kw">data class</span> <span class="tp">UserWithNotes</span>(</div><div class="acode-note">← не Entity! Просто клас для результату запиту</div></div>
+    <div class="acode-line"><div class="acode-src">    <span class="an">@Embedded</span></div><div class="acode-note">← включити всі поля UserEntity як є</div></div>
+    <div class="acode-line"><div class="acode-src">    <span class="kw">val</span> user: <span class="tp">UserEntity</span>,</div><div class="acode-note"></div></div>
+    <div class="acode-line hl"><div class="acode-src">    <span class="an">@Relation</span>(</div><div class="acode-note">← Room сам зробить JOIN і заповнить список</div></div>
+    <div class="acode-line"><div class="acode-src">        parentColumn = <span class="str">"id"</span>,</div><div class="acode-note">← поле з UserEntity</div></div>
+    <div class="acode-line"><div class="acode-src">        entityColumn = <span class="str">"userId"</span></div><div class="acode-note">← поле з NoteEntity що посилається на user.id</div></div>
+    <div class="acode-line"><div class="acode-src">    )</div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src">    <span class="kw">val</span> notes: <span class="tp">List</span>&lt;<span class="tp">NoteEntity</span>&gt;</div><div class="acode-note">← Room заповнить всі нотатки цього user</div></div>
+    <div class="acode-line"><div class="acode-src">)</div><div class="acode-note"></div></div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>DAO для зв'язаного запиту</h3>
+  <div class="acode">
+    <div class="acode-line"><div class="acode-src"><span class="an">@Transaction</span></div><div class="acode-note">← обов'язково при @Relation — виконує кілька запитів атомарно</div></div>
+    <div class="acode-line"><div class="acode-src"><span class="an">@Query</span>(<span class="str">"SELECT * FROM users"</span>)</div><div class="acode-note">← Room сам зробить другий запит для notes</div></div>
+    <div class="acode-line"><div class="acode-src"><span class="kw">fun</span> <span class="fn">getUsersWithNotes</span>(): <span class="tp">Flow</span>&lt;<span class="tp">List</span>&lt;<span class="tp">UserWithNotes</span>&gt;&gt;</div><div class="acode-note"></div></div>
+  </div>
+</div>
+`},
+
+// ═══════════════════════════════════════════════════════ MODULE 3
+{
+  id:11, mod:2, title:"Що таке API і REST", tag:"API",
+  content:`
+<h1 class="lesson-title">Що таке API і REST</h1>
+<p class="lesson-subtitle">Як твій додаток розмовляє з сервером</p>
+
+<div class="section">
+  <h3>Проблема</h3>
+  <p>Твій додаток хоче отримати курси валют. Вони зберігаються не на телефоні — вони на сервері в інтернеті. Як їх отримати?</p>
+</div>
+
+<div class="section">
+  <h3>API — інтерфейс для зв'язку</h3>
+  <p>API (Application Programming Interface) — це набір правил як програми спілкуються між собою. Сервер каже: «якщо хочеш курси валют — запитай мене ось так».</p>
+  <div class="arch">
+    <div class="arch-box blue">Твій додаток<small>клієнт</small></div>
+    <div class="arch-arrow">→ HTTP запит →</div>
+    <div class="arch-box green">Сервер API<small>повертає дані</small></div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>REST — стиль побудови API</h3>
+  <p>REST (Representational State Transfer) — найпопулярніший стиль API. Головна ідея: кожен ресурс має свій URL.</p>
+  <table class="step-table">
+    <tr><th>URL</th><th>Що означає</th></tr>
+    <tr><td><code>/users</code></td><td>Всі користувачі</td></tr>
+    <tr><td><code>/users/5</code></td><td>Користувач з id=5</td></tr>
+    <tr><td><code>/users/5/notes</code></td><td>Нотатки користувача 5</td></tr>
+    <tr><td><code>/currencies/USD</code></td><td>Курс долара</td></tr>
+  </table>
+</div>
+
+<div class="section">
+  <h3>HTTP запит і відповідь</h3>
+  <div class="box box-blue">
+    <div class="box-title">Запит (Request)</div>
+    <p><code>GET https://api.example.com/currencies/USD</code><br><br>
+    Метод + URL + (можливо тіло з даними)</p>
+  </div>
+  <div class="box box-green">
+    <div class="box-title">Відповідь (Response)</div>
+    <p>Статус: <code>200 OK</code><br>
+    Тіло: <code>{"currency": "USD", "rate": 41.5}</code></p>
+  </div>
+  <table class="step-table">
+    <tr><th>Код</th><th>Значення</th></tr>
+    <tr><td><code>200</code></td><td>OK — все добре</td></tr>
+    <tr><td><code>201</code></td><td>Created — створено</td></tr>
+    <tr><td><code>400</code></td><td>Bad Request — неправильний запит</td></tr>
+    <tr><td><code>401</code></td><td>Unauthorized — потрібна авторизація</td></tr>
+    <tr><td><code>404</code></td><td>Not Found — не знайдено</td></tr>
+    <tr><td><code>500</code></td><td>Server Error — помилка сервера</td></tr>
+  </table>
+</div>
+`},
+
+{
+  id:12, mod:2, title:"HTTP методи + JSON", tag:"API",
+  content:`
+<h1 class="lesson-title">HTTP методи і JSON</h1>
+<p class="lesson-subtitle">Типи запитів і формат даних</p>
+
+<div class="section">
+  <h3>4 основних HTTP методи</h3>
+  <table class="step-table">
+    <tr><th>Метод</th><th>Дія</th><th>Аналогія з БД</th></tr>
+    <tr><td><code>GET</code></td><td>Отримати дані</td><td>SELECT</td></tr>
+    <tr><td><code>POST</code></td><td>Створити новий запис</td><td>INSERT</td></tr>
+    <tr><td><code>PUT / PATCH</code></td><td>Оновити існуючий</td><td>UPDATE</td></tr>
+    <tr><td><code>DELETE</code></td><td>Видалити</td><td>DELETE</td></tr>
+  </table>
+</div>
+
+<div class="section">
+  <h3>JSON — формат даних</h3>
+  <p>JSON (JavaScript Object Notation) — це текстовий формат в якому сервер надсилає дані. Виглядає як Kotlin Map.</p>
+  <div class="codeblock"><span class="cm">// Один об'єкт</span>
+{
+  <span class="str">"id"</span>: <span class="nm">1</span>,
+  <span class="str">"name"</span>: <span class="str">"Данил"</span>,
+  <span class="str">"isActive"</span>: <span class="kw">true</span>,
+  <span class="str">"score"</span>: <span class="nm">9.5</span>
+}
+
+<span class="cm">// Масив об'єктів</span>
+[
+  { <span class="str">"currency"</span>: <span class="str">"USD"</span>, <span class="str">"rate"</span>: <span class="nm">41.5</span> },
+  { <span class="str">"currency"</span>: <span class="str">"EUR"</span>, <span class="str">"rate"</span>: <span class="nm">44.2</span> }
+]</div>
+  <div class="box box-blue">
+    <div class="box-title">JSON → Kotlin</div>
+    <p>Retrofit автоматично перетворює JSON в Kotlin data class і навпаки. Ти описуєш клас — Retrofit робить всю роботу.</p>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Kotlin data class для JSON</h3>
+  <div class="acode">
+    <div class="acode-line"><div class="acode-src"><span class="kw">data class</span> <span class="tp">CurrencyDto</span>(</div><div class="acode-note">← Dto = Data Transfer Object, клас для API відповіді</div></div>
+    <div class="acode-line"><div class="acode-src">    <span class="an">@SerializedName</span>(<span class="str">"currency"</span>)</div><div class="acode-note">← ім'я поля в JSON (якщо відрізняється від Kotlin)</div></div>
+    <div class="acode-line"><div class="acode-src">    <span class="kw">val</span> currency: <span class="tp">String</span>,</div><div class="acode-note">← Kotlin поле</div></div>
+    <div class="acode-line"><div class="acode-src">    <span class="an">@SerializedName</span>(<span class="str">"rate"</span>)</div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src">    <span class="kw">val</span> rate: <span class="tp">Double</span></div><div class="acode-note">← JSON number → Kotlin Double</div></div>
+    <div class="acode-line"><div class="acode-src">)</div><div class="acode-note"></div></div>
+  </div>
+  <div class="box box-yellow">
+    <div class="box-title">Dto vs Entity</div>
+    <p><code>CurrencyDto</code> — для API (що приходить з сервера).<br>
+    <code>CurrencyEntity</code> — для Room (що зберігається в БД).<br>
+    В Repository конвертуємо Dto → Entity через mapper функцію.</p>
+  </div>
+</div>
+`},
+
+{
+  id:13, mod:2, title:"Retrofit — налаштування", tag:"API",
+  content:`
+<h1 class="lesson-title">Retrofit — налаштування</h1>
+<p class="lesson-subtitle">Підключаємо бібліотеку і будуємо клієнт</p>
+
+<div class="section">
+  <h3>Залежності</h3>
+  <div class="acode">
+    <div class="acode-line"><div class="acode-src"><span class="cm">// build.gradle.kts (app)</span></div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src">implementation(<span class="str">"com.squareup.retrofit2:retrofit:2.11.0"</span>)</div><div class="acode-note">← сам Retrofit</div></div>
+    <div class="acode-line"><div class="acode-src">implementation(<span class="str">"com.squareup.retrofit2:converter-gson:2.11.0"</span>)</div><div class="acode-note">← конвертер JSON ↔ Kotlin через Gson</div></div>
+    <div class="acode-line"><div class="acode-src">implementation(<span class="str">"com.squareup.okhttp3:logging-interceptor:4.12.0"</span>)</div><div class="acode-note">← логування запитів в Logcat (для дебагу)</div></div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Hilt модуль для Retrofit</h3>
+  <div class="acode">
+    <div class="acode-line"><div class="acode-src"><span class="an">@Module</span> <span class="an">@InstallIn</span>(<span class="tp">SingletonComponent</span>::<span class="kw">class</span>)</div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src"><span class="kw">object</span> <span class="tp">NetworkModule</span> {</div><div class="acode-note"></div></div>
+    <div class="acode-line" style="height:8px"><div class="acode-src"></div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src">    <span class="an">@Singleton</span> <span class="an">@Provides</span></div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src">    <span class="kw">fun</span> <span class="fn">provideOkHttpClient</span>(): <span class="tp">OkHttpClient</span> {</div><div class="acode-note">← HTTP клієнт — налаштування з'єднання</div></div>
+    <div class="acode-line"><div class="acode-src">        <span class="kw">val</span> logging = <span class="tp">HttpLoggingInterceptor</span>().apply {</div><div class="acode-note">← перехоплювач для логування</div></div>
+    <div class="acode-line hl"><div class="acode-src">            level = <span class="tp">HttpLoggingInterceptor</span>.Level.BODY</div><div class="acode-note">← логуємо і заголовки і тіло запиту/відповіді</div></div>
+    <div class="acode-line"><div class="acode-src">        }</div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src">        <span class="kw">return</span> <span class="tp">OkHttpClient</span>.Builder()</div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src">            .addInterceptor(logging)</div><div class="acode-note">← додаємо логер</div></div>
+    <div class="acode-line"><div class="acode-src">            .connectTimeout(<span class="nm">30</span>, <span class="tp">TimeUnit</span>.SECONDS)</div><div class="acode-note">← скільки чекати на з'єднання</div></div>
+    <div class="acode-line"><div class="acode-src">            .readTimeout(<span class="nm">30</span>, <span class="tp">TimeUnit</span>.SECONDS)</div><div class="acode-note">← скільки чекати на відповідь</div></div>
+    <div class="acode-line"><div class="acode-src">            .build()</div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src">    }</div><div class="acode-note"></div></div>
+    <div class="acode-line" style="height:8px"><div class="acode-src"></div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src">    <span class="an">@Singleton</span> <span class="an">@Provides</span></div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src">    <span class="kw">fun</span> <span class="fn">provideRetrofit</span>(client: <span class="tp">OkHttpClient</span>): <span class="tp">Retrofit</span> =</div><div class="acode-note">← Hilt передасть OkHttpClient</div></div>
+    <div class="acode-line"><div class="acode-src">        <span class="tp">Retrofit</span>.Builder()</div><div class="acode-note"></div></div>
+    <div class="acode-line hl"><div class="acode-src">            .baseUrl(<span class="str">"https://api.example.com/"</span>)</div><div class="acode-note">← базовий URL, до нього додається шлях з DAO</div></div>
+    <div class="acode-line"><div class="acode-src">            .addConverterFactory(<span class="tp">GsonConverterFactory</span>.create())</div><div class="acode-note">← JSON ↔ Kotlin конвертер</div></div>
+    <div class="acode-line"><div class="acode-src">            .client(client)</div><div class="acode-note">← використовуємо наш OkHttpClient</div></div>
+    <div class="acode-line"><div class="acode-src">            .build()</div><div class="acode-note"></div></div>
+    <div class="acode-line" style="height:8px"><div class="acode-src"></div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src">    <span class="an">@Singleton</span> <span class="an">@Provides</span></div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src">    <span class="kw">fun</span> <span class="fn">provideApiService</span>(retrofit: <span class="tp">Retrofit</span>): <span class="tp">CurrencyApiService</span> =</div><div class="acode-note">← створюємо реалізацію нашого interface</div></div>
+    <div class="acode-line"><div class="acode-src">        retrofit.create(<span class="tp">CurrencyApiService</span>::<span class="kw">class</span>.java)</div><div class="acode-note">← Retrofit генерує реалізацію автоматично</div></div>
+    <div class="acode-line"><div class="acode-src">}</div><div class="acode-note"></div></div>
+  </div>
+</div>
+`},
+
+{
+  id:14, mod:2, title:"API Interface", tag:"API",
+  content:`
+<h1 class="lesson-title">API Interface — описуємо запити</h1>
+<p class="lesson-subtitle">Аналог DAO але для мережі</p>
+
+<div class="section">
+  <h3>Повний приклад</h3>
+  <div class="acode">
+    <div class="acode-line"><div class="acode-src"><span class="kw">interface</span> <span class="tp">CurrencyApiService</span> {</div><div class="acode-note">← interface, Retrofit згенерує реалізацію</div></div>
+    <div class="acode-line" style="height:8px"><div class="acode-src"></div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src">    <span class="an">@GET</span>(<span class="str">"currencies"</span>)</div><div class="acode-note">← GET запит на baseUrl + "currencies"</div></div>
+    <div class="acode-line hl"><div class="acode-src">    <span class="kw">suspend fun</span> <span class="fn">getCurrencies</span>(): <span class="tp">List</span>&lt;<span class="tp">CurrencyDto</span>&gt;</div><div class="acode-note">← suspend = не блокує UI. Повертає розпарсений список</div></div>
+    <div class="acode-line" style="height:8px"><div class="acode-src"></div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src">    <span class="an">@GET</span>(<span class="str">"currencies/{code}"</span>)</div><div class="acode-note">← {code} = змінна частина URL</div></div>
+    <div class="acode-line"><div class="acode-src">    <span class="kw">suspend fun</span> <span class="fn">getCurrency</span>(</div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src">        <span class="an">@Path</span>(<span class="str">"code"</span>) code: <span class="tp">String</span></div><div class="acode-note">← @Path підставляє значення в {code}</div></div>
+    <div class="acode-line"><div class="acode-src">    ): <span class="tp">CurrencyDto</span></div><div class="acode-note"></div></div>
+    <div class="acode-line" style="height:8px"><div class="acode-src"></div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src">    <span class="an">@GET</span>(<span class="str">"currencies"</span>)</div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src">    <span class="kw">suspend fun</span> <span class="fn">searchCurrencies</span>(</div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src">        <span class="an">@Query</span>(<span class="str">"search"</span>) query: <span class="tp">String</span>,</div><div class="acode-note">← @Query додає ?search=value до URL</div></div>
+    <div class="acode-line"><div class="acode-src">        <span class="an">@Query</span>(<span class="str">"limit"</span>) limit: <span class="tp">Int</span> = <span class="nm">20</span></div><div class="acode-note">← &limit=20</td></div></div>
+    <div class="acode-line"><div class="acode-src">    ): <span class="tp">List</span>&lt;<span class="tp">CurrencyDto</span>&gt;</div><div class="acode-note"></div></div>
+    <div class="acode-line" style="height:8px"><div class="acode-src"></div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src">    <span class="an">@POST</span>(<span class="str">"favorites"</span>)</div><div class="acode-note">← POST запит</div></div>
+    <div class="acode-line"><div class="acode-src">    <span class="kw">suspend fun</span> <span class="fn">addFavorite</span>(</div><div class="acode-note"></div></div>
+    <div class="acode-line hl"><div class="acode-src">        <span class="an">@Body</span> request: <span class="tp">AddFavoriteRequest</span></div><div class="acode-note">← @Body = відправити об'єкт як JSON в тілі запиту</div></div>
+    <div class="acode-line"><div class="acode-src">    ): <span class="tp">FavoriteDto</span></div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src">}</div><div class="acode-note"></div></div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Анотації — коротко</h3>
+  <table class="step-table">
+    <tr><th>Анотація</th><th>Де</th><th>Що робить</th></tr>
+    <tr><td><code>@GET("path")</code></td><td>функція</td><td>GET запит на baseUrl/path</td></tr>
+    <tr><td><code>@POST("path")</code></td><td>функція</td><td>POST запит</td></tr>
+    <tr><td><code>@Path("x")</code></td><td>параметр</td><td>Підставляє в {x} в URL</td></tr>
+    <tr><td><code>@Query("x")</code></td><td>параметр</td><td>Додає ?x=value до URL</td></tr>
+    <tr><td><code>@Body</code></td><td>параметр</td><td>JSON тіло запиту</td></tr>
+    <tr><td><code>@Header("x")</code></td><td>параметр</td><td>HTTP заголовок</td></tr>
+  </table>
+</div>
+`},
+
+{
+  id:15, mod:2, title:"Repository + обробка помилок", tag:"API",
+  content:`
+<h1 class="lesson-title">Repository для API + обробка помилок</h1>
+<p class="lesson-subtitle">Правильний спосіб робити мережеві запити</p>
+
+<div class="section">
+  <h3>Result — обгортка для результату</h3>
+  <p>Мережевий запит може завершитись успіхом або помилкою. Kotlin має вбудований <code>Result</code> або можна зробити свій sealed class:</p>
+  <div class="acode">
+    <div class="acode-line"><div class="acode-src"><span class="kw">sealed class</span> <span class="tp">ApiResult</span>&lt;<span class="kw">out</span> T&gt; {</div><div class="acode-note">← sealed = всі варіанти відомі компілятору</div></div>
+    <div class="acode-line"><div class="acode-src">    <span class="kw">data class</span> <span class="tp">Success</span>&lt;T&gt;(<span class="kw">val</span> data: T) : <span class="tp">ApiResult</span>&lt;T&gt;()</div><div class="acode-note">← успіх з даними</div></div>
+    <div class="acode-line"><div class="acode-src">    <span class="kw">data class</span> <span class="tp">Error</span>(<span class="kw">val</span> message: <span class="tp">String</span>) : <span class="tp">ApiResult</span>&lt;<span class="tp">Nothing</span>&gt;()</div><div class="acode-note">← помилка з повідомленням</div></div>
+    <div class="acode-line"><div class="acode-src">    <span class="kw">object</span> <span class="tp">Loading</span> : <span class="tp">ApiResult</span>&lt;<span class="tp">Nothing</span>&gt;()</div><div class="acode-note">← стан завантаження</div></div>
+    <div class="acode-line"><div class="acode-src">}</div><div class="acode-note"></div></div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Repository з обробкою помилок</h3>
+  <div class="acode">
+    <div class="acode-line"><div class="acode-src"><span class="kw">class</span> <span class="tp">CurrencyRepository</span> <span class="an">@Inject</span> <span class="kw">constructor</span>(</div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src">    <span class="kw">private val</span> api: <span class="tp">CurrencyApiService</span>,</div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src">    <span class="kw">private val</span> dao: <span class="tp">CurrencyDao</span></div><div class="acode-note">← також є доступ до локальної БД</div></div>
+    <div class="acode-line"><div class="acode-src">) {</div><div class="acode-note"></div></div>
+    <div class="acode-line" style="height:8px"><div class="acode-src"></div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src">    <span class="kw">suspend fun</span> <span class="fn">getCurrencies</span>(): <span class="tp">ApiResult</span>&lt;<span class="tp">List</span>&lt;<span class="tp">CurrencyDto</span>&gt;&gt; {</div><div class="acode-note"></div></div>
+    <div class="acode-line hl"><div class="acode-src">        <span class="kw">return try</span> {</div><div class="acode-note">← обгортаємо в try-catch</div></div>
+    <div class="acode-line"><div class="acode-src">            <span class="kw">val</span> result = api.getCurrencies()</div><div class="acode-note">← реальний мережевий запит</div></div>
+    <div class="acode-line"><div class="acode-src">            dao.insertAll(result.map { it.toEntity() })</div><div class="acode-note">← кешуємо в Room</div></div>
+    <div class="acode-line"><div class="acode-src">            <span class="tp">ApiResult</span>.Success(result)</div><div class="acode-note">← повертаємо успіх</div></div>
+    <div class="acode-line"><div class="acode-src">        } <span class="kw">catch</span> (e: <span class="tp">HttpException</span>) {</div><div class="acode-note">← HTTP помилка (4xx, 5xx)</div></div>
+    <div class="acode-line"><div class="acode-src">            <span class="tp">ApiResult</span>.Error(<span class="str">"Помилка сервера: </span>\${e.code()}<span class="str">"</span>)</div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src">        } <span class="kw">catch</span> (e: <span class="tp">IOException</span>) {</div><div class="acode-note">← немає інтернету</div></div>
+    <div class="acode-line"><div class="acode-src">            <span class="tp">ApiResult</span>.Error(<span class="str">"Немає з'єднання з інтернетом"</span>)</div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src">        }</div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src">    }</div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src">}</div><div class="acode-note"></div></div>
+  </div>
+</div>
+`},
+
+{
+  id:16, mod:2, title:"ViewModel + повний потік", tag:"API",
+  content:`
+<h1 class="lesson-title">ViewModel і повний потік даних</h1>
+<p class="lesson-subtitle">Збираємо все разом: API → Room → UI</p>
+
+<div class="section">
+  <h3>Повна архітектура</h3>
+  <div class="arch">
+    <div class="arch-box blue">UI<small>Compose</small></div>
+    <div class="arch-arrow">↕</div>
+    <div class="arch-box green">ViewModel<small>StateFlow</small></div>
+    <div class="arch-arrow">↕</div>
+    <div class="arch-box purple">Repository<small>вирішує звідки брати</small></div>
+    <div class="arch-arrow">↕</div>
+    <div class="arch-box yellow">API + Room<small>мережа + кеш</small></div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>ViewModel</h3>
+  <div class="acode">
+    <div class="acode-line"><div class="acode-src"><span class="an">@HiltViewModel</span></div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src"><span class="kw">class</span> <span class="tp">CurrencyViewModel</span> <span class="an">@Inject</span> <span class="kw">constructor</span>(</div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src">    <span class="kw">private val</span> repository: <span class="tp">CurrencyRepository</span></div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src">) : <span class="tp">ViewModel</span>() {</div><div class="acode-note"></div></div>
+    <div class="acode-line" style="height:8px"><div class="acode-src"></div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src">    <span class="kw">private val</span> _uiState = <span class="tp">MutableStateFlow</span>&lt;<span class="tp">ApiResult</span>&lt;<span class="tp">List</span>&lt;<span class="tp">CurrencyDto</span>&gt;&gt;&gt;(</div><div class="acode-note">← приватний змінюваний стан</div></div>
+    <div class="acode-line"><div class="acode-src">        <span class="tp">ApiResult</span>.Loading</div><div class="acode-note">← початковий стан — завантаження</div></div>
+    <div class="acode-line"><div class="acode-src">    )</div><div class="acode-note"></div></div>
+    <div class="acode-line hl"><div class="acode-src">    <span class="kw">val</span> uiState = _uiState.asStateFlow()</div><div class="acode-note">← публічний тільки для читання (UI не може змінити)</div></div>
+    <div class="acode-line" style="height:8px"><div class="acode-src"></div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src">    <span class="kw">init</span> {</div><div class="acode-note">← виконується при створенні ViewModel</div></div>
+    <div class="acode-line"><div class="acode-src">        loadCurrencies()</div><div class="acode-note">← одразу завантажуємо дані</div></div>
+    <div class="acode-line"><div class="acode-src">    }</div><div class="acode-note"></div></div>
+    <div class="acode-line" style="height:8px"><div class="acode-src"></div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src">    <span class="kw">fun</span> <span class="fn">loadCurrencies</span>() {</div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src">        viewModelScope.launch {</div><div class="acode-note">← coroutine в scope ViewModel</div></div>
+    <div class="acode-line"><div class="acode-src">            _uiState.value = <span class="tp">ApiResult</span>.Loading</div><div class="acode-note">← показуємо лоадер</div></div>
+    <div class="acode-line"><div class="acode-src">            _uiState.value = repository.getCurrencies()</div><div class="acode-note">← результат (Success або Error)</div></div>
+    <div class="acode-line"><div class="acode-src">        }</div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src">    }</div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src">}</div><div class="acode-note"></div></div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>UI (Compose)</h3>
+  <div class="acode">
+    <div class="acode-line"><div class="acode-src"><span class="kw">val</span> uiState <span class="kw">by</span> viewModel.uiState.collectAsStateWithLifecycle()</div><div class="acode-note">← підписуємось на StateFlow</div></div>
+    <div class="acode-line" style="height:8px"><div class="acode-src"></div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src"><span class="kw">when</span> (uiState) {</div><div class="acode-note">← sealed class — компілятор знає всі варіанти</div></div>
+    <div class="acode-line hl"><div class="acode-src">    <span class="kw">is</span> <span class="tp">ApiResult</span>.Loading -> <span class="tp">CircularProgressIndicator</span>()</div><div class="acode-note">← показуємо спіннер</div></div>
+    <div class="acode-line"><div class="acode-src">    <span class="kw">is</span> <span class="tp">ApiResult</span>.Success -> <span class="tp">CurrencyList</span>(uiState.data)</div><div class="acode-note">← показуємо список</div></div>
+    <div class="acode-line"><div class="acode-src">    <span class="kw">is</span> <span class="tp">ApiResult</span>.Error -> <span class="tp">ErrorMessage</span>(uiState.message)</div><div class="acode-note">← показуємо помилку</div></div>
+    <div class="acode-line"><div class="acode-src">}</div><div class="acode-note"></div></div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Стратегія: API + Room кеш</h3>
+  <div class="box box-green">
+    <div class="box-title">Offline-first підхід</div>
+    <ul>
+      <li>Спочатку показуємо дані з Room (миттєво)</li>
+      <li>Паралельно запитуємо API</li>
+      <li>Коли прийшла відповідь — оновлюємо Room</li>
+      <li>Room через Flow автоматично оновлює UI</li>
+    </ul>
+  </div>
+  <p>Так додаток працює навіть без інтернету — показує кешовані дані.</p>
+</div>
+
+<div class="section">
+  <h3>Ти пройшов весь курс</h3>
+  <div class="box box-purple">
+    <div class="box-title">Що ти вивчив</div>
+    <ul>
+      <li>Теорія БД: таблиці, ключі, зв'язки</li>
+      <li>Room: Entity, DAO, Database, Hilt інтеграція</li>
+      <li>Room зв'язки: @Embedded, @Relation</li>
+      <li>API: REST, HTTP, JSON</li>
+      <li>Retrofit: налаштування, interface, анотації</li>
+      <li>Повна архітектура: API → Repository → ViewModel → UI</li>
+    </ul>
+  </div>
+</div>
+`},
+];
+
+// ─── STATE ──────────────────────────────────────────────────────────────────
+const KEY = 'db_course_v1';
+function load() { try { return JSON.parse(localStorage.getItem(KEY)||'{}'); } catch { return {}; } }
+function save(p) { localStorage.setItem(KEY, JSON.stringify(p)); }
+let progress = load(), currentId = 1;
+
+// ─── SIDEBAR ────────────────────────────────────────────────────────────────
+function renderSidebar() {
+  const done = LESSONS.filter(l => progress[l.id]).length;
+  document.getElementById('prog-text').textContent = `${done} з ${LESSONS.length} уроків пройдено`;
+  document.getElementById('prog-fill').style.width = `${Math.round(done/LESSONS.length*100)}%`;
+
+  let html = '';
+  let lastMod = -1;
+  for (const l of LESSONS) {
+    if (l.mod !== lastMod) {
+      html += `<div class="module-label">${MODULES[l.mod].label}</div><div class="lesson-list">`;
+      lastMod = l.mod;
+    }
+    const isDone = !!progress[l.id];
+    const isActive = l.id === currentId;
+    html += `<div class="lesson-item ${isActive?'active':''}" onclick="go(${l.id})">
+      <div class="l-icon ${isDone?'done':isActive?'active':''}">${isDone?'✓':l.id}</div>
+      <div><div class="l-name">${l.title}</div><div class="l-tag">${l.tag}</div></div>
+    </div>`;
+  }
+  html += '</div>';
+  document.getElementById('lesson-list').innerHTML = html;
+}
+
+// ─── MAIN ───────────────────────────────────────────────────────────────────
+function renderLesson(id) {
+  const l = LESSONS.find(x => x.id === id);
+  if (!l) return;
+  const isLast = id === LESSONS.length;
+  const nextBtn = isLast
+    ? `<button class="btn-next" onclick="markDone()">Завершити курс ✓</button>`
+    : `<button class="btn-next" onclick="next()">Далі →</button>`;
+  document.getElementById('main').innerHTML = l.content + `<div class="next-wrap">${nextBtn}</div>`;
+}
+
+function go(id) {
+  currentId = id;
+  document.getElementById('main').scrollTop = 0;
+  renderSidebar();
+  renderLesson(id);
+}
+
+function next() {
+  if (!progress[currentId]) { progress[currentId] = true; save(progress); }
+  if (currentId < LESSONS.length) go(currentId + 1);
+}
+
+function markDone() {
+  if (!progress[currentId]) { progress[currentId] = true; save(progress); renderSidebar(); }
+}
+
+renderSidebar();
+renderLesson(1);
+</script>
+</body>
+</html>
