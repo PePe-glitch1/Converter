@@ -109,7 +109,7 @@ code { background: rgba(255,255,255,.08); border-radius: 4px; padding: 1px 6px; 
 <aside class="sidebar">
   <div class="sidebar-header">
     <h1>БД + Room + API</h1>
-    <p id="prog-text">0 з 16 уроків пройдено</p>
+    <p id="prog-text">0 з 19 уроків пройдено</p>
     <div class="progress-bar"><div class="progress-fill" id="prog-fill" style="width:0%"></div></div>
   </div>
   <div id="lesson-list"></div>
@@ -122,6 +122,7 @@ const MODULES = [
   { label: "Модуль 1 — Теорія БД", color: "blue" },
   { label: "Модуль 2 — Room", color: "green" },
   { label: "Модуль 3 — API (Retrofit)", color: "purple" },
+  { label: "Модуль 4 — Додатково", color: "orange" },
 ];
 
 const LESSONS = [
@@ -1037,6 +1038,219 @@ ksp(<span class="str">"androidx.room:room-compiler:\$roomVersion"</span>)       
   </div>
 </div>
 `},
+
+// ═══════════════════════════════════════════════════════ MODULE 4
+{
+  id:17, mod:3, title:"Mapper — конвертація між шарами", tag:"Додатково",
+  content:`
+<h1 class="lesson-title">Mapper — конвертація між шарами</h1>
+<p class="lesson-subtitle">Як перетворювати дані між Entity, Domain і Dto</p>
+
+<div class="section">
+  <h3>Навіщо mapper</h3>
+  <p>У тебе три шари і в кожному свій клас для одних і тих самих даних:</p>
+  <div class="arch">
+    <div class="arch-box yellow">CurrencyEntity<small>Room / БД</small></div>
+    <div class="arch-arrow">↔</div>
+    <div class="arch-box blue">Currency<small>Domain / логіка</small></div>
+    <div class="arch-arrow">↔</div>
+    <div class="arch-box purple">CurrencyDto<small>API / мережа</small></div>
+  </div>
+  <div class="box box-blue">
+    <div class="box-title">Чому не один клас для всього?</div>
+    <p>Entity може мати поля для Room (<code>@PrimaryKey</code>), Dto може мати поля тільки для API (<code>@SerializedName</code>). Domain — чистий Kotlin без залежностей. Кожен шар незалежний.</p>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Entity → Domain</h3>
+  <div class="acode">
+    <div class="acode-line"><div class="acode-src"><span class="cm">// Extension функція на Entity</span></div><div class="acode-note">← пишеш окремий файл Mappers.kt</div></div>
+    <div class="acode-line"><div class="acode-src"><span class="kw">fun</span> <span class="tp">CurrencyEntity</span>.<span class="fn">toDomain</span>(): <span class="tp">Currency</span> {</div><div class="acode-note">← extension на Entity, повертає Domain</div></div>
+    <div class="acode-line"><div class="acode-src">    <span class="kw">return</span> <span class="tp">Currency</span>(</div><div class="acode-note"></div></div>
+    <div class="acode-line hl"><div class="acode-src">        id = <span class="kw">this</span>.id,</div><div class="acode-note">← this = об'єкт Entity</div></div>
+    <div class="acode-line"><div class="acode-src">        code = <span class="kw">this</span>.code,</div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src">        rate = <span class="kw">this</span>.rate,</div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src">        updatedAt = <span class="kw">this</span>.updatedAt</div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src">    )</div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src">}</div><div class="acode-note"></div></div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Domain → Entity</h3>
+  <div class="acode">
+    <div class="acode-line"><div class="acode-src"><span class="kw">fun</span> <span class="tp">Currency</span>.<span class="fn">toEntity</span>(): <span class="tp">CurrencyEntity</span> {</div><div class="acode-note">← extension на Domain</div></div>
+    <div class="acode-line"><div class="acode-src">    <span class="kw">return</span> <span class="tp">CurrencyEntity</span>(</div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src">        id = <span class="kw">this</span>.id,</div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src">        code = <span class="kw">this</span>.code,</div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src">        rate = <span class="kw">this</span>.rate,</div><div class="acode-note"></div></div>
+    <div class="acode-line hl"><div class="acode-src">        updatedAt = <span class="kw">this</span>.updatedAt ?: System.currentTimeMillis()</div><div class="acode-note">← якщо дата null — підставляємо поточний час</div></div>
+    <div class="acode-line"><div class="acode-src">    )</div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src">}</div><div class="acode-note"></div></div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Dto → Domain (коли додаси API)</h3>
+  <div class="acode">
+    <div class="acode-line"><div class="acode-src"><span class="kw">fun</span> <span class="tp">CurrencyDto</span>.<span class="fn">toDomain</span>(): <span class="tp">Currency</span> {</div><div class="acode-note">← extension на Dto</div></div>
+    <div class="acode-line"><div class="acode-src">    <span class="kw">return</span> <span class="tp">Currency</span>(</div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src">        id = <span class="nm">0</span>,</div><div class="acode-note">← API зазвичай не дає id, Room сам згенерує</div></div>
+    <div class="acode-line"><div class="acode-src">        code = <span class="kw">this</span>.code,</div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src">        rate = <span class="kw">this</span>.rate,</div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src">        updatedAt = System.currentTimeMillis()</div><div class="acode-note">← момент коли отримали з API</div></div>
+    <div class="acode-line"><div class="acode-src">    )</div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src">}</div><div class="acode-note"></div></div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Де використовувати</h3>
+  <div class="acode">
+    <div class="acode-line"><div class="acode-src"><span class="cm">// Repository — тут живуть mapper виклики</span></div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src"><span class="kw">fun</span> <span class="fn">getCurrencies</span>(): <span class="tp">Flow</span>&lt;<span class="tp">List</span>&lt;<span class="tp">Currency</span>&gt;&gt; {</div><div class="acode-note"></div></div>
+    <div class="acode-line hl"><div class="acode-src">    <span class="kw">return</span> dao.getAllCurrencies().map { list -> list.map { it.toDomain() } }</div><div class="acode-note">← Entity → Domain прямо у Flow</div></div>
+    <div class="acode-line"><div class="acode-src">}</div><div class="acode-note"></div></div>
+    <div class="acode-line" style="height:8px"><div class="acode-src"></div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src"><span class="kw">suspend fun</span> <span class="fn">insert</span>(currency: <span class="tp">Currency</span>) {</div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src">    dao.insert(currency.toEntity())</div><div class="acode-note">← Domain → Entity перед збереженням</div></div>
+    <div class="acode-line"><div class="acode-src">}</div><div class="acode-note"></div></div>
+  </div>
+
+  <div class="box box-yellow">
+    <div class="box-title">Де лежить файл Mappers.kt</div>
+    <p>Зазвичай в <code>data/mapper/</code> або поруч з Repository. ViewModel і Domain про mapper не знають — це деталь data шару.</p>
+  </div>
+</div>
+`},
+
+{
+  id:18, mod:3, title:"TypeConverter — складні типи в Room", tag:"Додатково",
+  content:`
+<h1 class="lesson-title">TypeConverter</h1>
+<p class="lesson-subtitle">Як зберігати в Room типи яких немає в SQLite</p>
+
+<div class="section">
+  <h3>Проблема</h3>
+  <p>SQLite вміє зберігати тільки: <code>INTEGER</code>, <code>TEXT</code>, <code>REAL</code>, <code>BLOB</code>. Що робити якщо хочеш зберегти <code>List</code>, <code>LocalDate</code>, або свій enum?</p>
+  <div class="box box-yellow">
+    <div class="box-title">Room впаде з помилкою</div>
+    <p>Якщо в Entity є поле типу <code>List&lt;String&gt;</code> або <code>LocalDate</code> — Room не знає як це зберегти і покаже помилку компіляції.</p>
+  </div>
+</div>
+
+<div class="section">
+  <h3>TypeConverter — конвертуємо в підтримуваний тип</h3>
+  <p>Пишеш дві функції: один напрямок конвертує в <code>String</code>/<code>Long</code>, інший — назад.</p>
+
+  <div class="acode">
+    <div class="acode-line"><div class="acode-src"><span class="kw">class</span> <span class="tp">Converters</span> {</div><div class="acode-note">← звичайний клас, не object</div></div>
+    <div class="acode-line" style="height:8px"><div class="acode-src"></div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src">    <span class="cm">// List&lt;String&gt; ↔ String (через JSON)</span></div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src">    <span class="an">@TypeConverter</span></div><div class="acode-note">← Room знає що це конвертер</div></div>
+    <div class="acode-line hl"><div class="acode-src">    <span class="kw">fun</span> <span class="fn">fromList</span>(list: <span class="tp">List</span>&lt;<span class="tp">String</span>&gt;): <span class="tp">String</span> = list.joinToString(<span class="str">","</span>)</div><div class="acode-note">← List → "USD,EUR,UAH"</div></div>
+    <div class="acode-line"><div class="acode-src">    <span class="an">@TypeConverter</span></div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src">    <span class="kw">fun</span> <span class="fn">toList</span>(value: <span class="tp">String</span>): <span class="tp">List</span>&lt;<span class="tp">String</span>&gt; = value.split(<span class="str">","</span>)</div><div class="acode-note">← "USD,EUR,UAH" → List</div></div>
+    <div class="acode-line" style="height:8px"><div class="acode-src"></div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src">    <span class="cm">// LocalDate ↔ Long</span></div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src">    <span class="an">@TypeConverter</span></div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src">    <span class="kw">fun</span> <span class="fn">fromLocalDate</span>(date: <span class="tp">LocalDate</span>?): <span class="tp">Long?</span> = date?.toEpochDay()</div><div class="acode-note">← LocalDate → число днів від 1970-01-01</div></div>
+    <div class="acode-line"><div class="acode-src">    <span class="an">@TypeConverter</span></div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src">    <span class="kw">fun</span> <span class="fn">toLocalDate</span>(value: <span class="tp">Long?</span>): <span class="tp">LocalDate?</span> = value?.let { <span class="tp">LocalDate</span>.ofEpochDay(it) }</div><div class="acode-note">← число → LocalDate</div></div>
+    <div class="acode-line"><div class="acode-src">}</div><div class="acode-note"></div></div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Реєструємо в Database класі</h3>
+  <div class="acode">
+    <div class="acode-line"><div class="acode-src"><span class="an">@Database</span>(entities = [<span class="tp">HistoryEntity</span>::<span class="kw">class</span>], version = <span class="nm">1</span>)</div><div class="acode-note"></div></div>
+    <div class="acode-line hl"><div class="acode-src"><span class="an">@TypeConverters</span>(<span class="tp">Converters</span>::<span class="kw">class</span>)</div><div class="acode-note">← підключаємо конвертери до всієї БД</div></div>
+    <div class="acode-line"><div class="acode-src"><span class="kw">abstract class</span> <span class="tp">AppDatabase</span> : <span class="tp">RoomDatabase</span>() { ... }</div><div class="acode-note">← тепер всі Entity можуть використовувати ці типи</div></div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Для Enum простіше</h3>
+  <div class="acode">
+    <div class="acode-line"><div class="acode-src"><span class="kw">enum class</span> <span class="tp">TransactionType</span> { INCOME, EXPENSE }</div><div class="acode-note"></div></div>
+    <div class="acode-line" style="height:8px"><div class="acode-src"></div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src"><span class="an">@TypeConverter</span></div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src"><span class="kw">fun</span> <span class="fn">fromEnum</span>(type: <span class="tp">TransactionType</span>): <span class="tp">String</span> = type.name</div><div class="acode-note">← INCOME → "INCOME"</div></div>
+    <div class="acode-line"><div class="acode-src"><span class="an">@TypeConverter</span></div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src"><span class="kw">fun</span> <span class="fn">toEnum</span>(value: <span class="tp">String</span>): <span class="tp">TransactionType</span> = <span class="tp">TransactionType</span>.valueOf(value)</div><div class="acode-note">← "INCOME" → INCOME</div></div>
+  </div>
+</div>
+`},
+
+{
+  id:19, mod:3, title:"Migration — зміна структури БД", tag:"Додатково",
+  content:`
+<h1 class="lesson-title">Migration — зміна структури БД</h1>
+<p class="lesson-subtitle">Що робити коли додав або видалив стовпець</p>
+
+<div class="section">
+  <h3>Проблема</h3>
+  <p>Ти випустив додаток. На телефонах користувачів вже є БД версії 1. Ти додав новий стовпець в Entity — і збільшив <code>version = 2</code>. Що станеться при оновленні?</p>
+  <div class="box box-yellow">
+    <div class="box-title">Без migration — додаток впаде</div>
+    <p>Room побачить що схема змінилась але migration немає — і викине помилку. Всі дані користувача залишаться але додаток не запуститься.</p>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Migration — інструкція як оновити схему</h3>
+  <div class="acode">
+    <div class="acode-line"><div class="acode-src"><span class="cm">// Додали стовпець note до HistoryEntity</span></div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src"><span class="kw">val</span> MIGRATION_1_2 = <span class="kw">object</span> : <span class="tp">Migration</span>(<span class="nm">1</span>, <span class="nm">2</span>) {</div><div class="acode-note">← з версії 1 на версію 2</div></div>
+    <div class="acode-line hl"><div class="acode-src">    <span class="kw">override fun</span> <span class="fn">migrate</span>(db: <span class="tp">SupportSQLiteDatabase</span>) {</div><div class="acode-note">← тут пишеш SQL щоб оновити таблицю</div></div>
+    <div class="acode-line"><div class="acode-src">        db.execSQL(<span class="str">"ALTER TABLE history ADD COLUMN note TEXT NOT NULL DEFAULT ''"</span>)</div><div class="acode-note">← додаємо стовпець, дефолт '' для існуючих рядків</div></div>
+    <div class="acode-line"><div class="acode-src">    }</div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src">}</div><div class="acode-note"></div></div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Реєструємо в Database</h3>
+  <div class="acode">
+    <div class="acode-line"><div class="acode-src"><span class="an">@Database</span>(entities = [<span class="tp">HistoryEntity</span>::<span class="kw">class</span>], version = <span class="nm">2</span>)</div><div class="acode-note">← версія збільшилась до 2</div></div>
+    <div class="acode-line"><div class="acode-src"><span class="kw">abstract class</span> <span class="tp">AppDatabase</span> : <span class="tp">RoomDatabase</span>() {</div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src">    <span class="kw">companion object</span> {</div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src">        <span class="kw">fun</span> <span class="fn">getInstance</span>(ctx: <span class="tp">Context</span>) =</div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src">            Room.databaseBuilder(ctx, <span class="tp">AppDatabase</span>::<span class="kw">class</span>.java, <span class="str">"app.db"</span>)</div><div class="acode-note"></div></div>
+    <div class="acode-line hl"><div class="acode-src">                .addMigrations(MIGRATION_1_2)</div><div class="acode-note">← підключаємо migration</div></div>
+    <div class="acode-line"><div class="acode-src">                .build()</div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src">    }</div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src">}</div><div class="acode-note"></div></div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Під час розробки — простіший варіант</h3>
+  <div class="acode">
+    <div class="acode-line"><div class="acode-src">Room.databaseBuilder(ctx, <span class="tp">AppDatabase</span>::<span class="kw">class</span>.java, <span class="str">"app.db"</span>)</div><div class="acode-note"></div></div>
+    <div class="acode-line hl"><div class="acode-src">    .fallbackToDestructiveMigration()</div><div class="acode-note">← видаляє і створює БД заново при зміні схеми</div></div>
+    <div class="acode-line"><div class="acode-src">    .build()</div><div class="acode-note">← всі дані стираються! Тільки для розробки</div></div>
+  </div>
+  <div class="box box-yellow">
+    <div class="box-title">Важливо</div>
+    <p><code>fallbackToDestructiveMigration</code> стирає всі дані користувача. Можна використовувати тільки під час розробки — перед релізом замінити на справжній Migration.</p>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Що можна робити в Migration</h3>
+  <table class="step-table">
+    <tr><th>Дія</th><th>SQL</th></tr>
+    <tr><td>Додати стовпець</td><td><code>ALTER TABLE t ADD COLUMN x TEXT</code></td></tr>
+    <tr><td>Створити нову таблицю</td><td><code>CREATE TABLE ...</code></td></tr>
+    <tr><td>Видалити таблицю</td><td><code>DROP TABLE t</code></td></tr>
+    <tr><td>Перейменувати</td><td><code>ALTER TABLE t RENAME TO t2</code></td></tr>
+  </table>
+  <p>Видалити стовпець в SQLite напряму не можна — треба створити нову таблицю без нього і перенести дані.</p>
+</div>
+`},
 ];
 
 // ─── STATE ──────────────────────────────────────────────────────────────────
@@ -1048,7 +1262,7 @@ let progress = load(), currentId = 1;
 // ─── SIDEBAR ────────────────────────────────────────────────────────────────
 function renderSidebar() {
   const done = LESSONS.filter(l => progress[l.id]).length;
-  document.getElementById('prog-text').textContent = `${done} з ${LESSONS.length} уроків пройдено`;
+  document.getElementById('prog-text').textContent = done + ' з ' + LESSONS.length + ' уроків пройдено';
   document.getElementById('prog-fill').style.width = `${Math.round(done/LESSONS.length*100)}%`;
 
   let html = '';
