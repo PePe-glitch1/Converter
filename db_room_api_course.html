@@ -513,61 +513,74 @@ ksp(<span class="str">"androidx.room:room-compiler:\$roomVersion"</span>)       
   id:8, mod:1, title:"Database клас", tag:"Room",
   content:`
 <h1 class="lesson-title">Database клас — точка входу</h1>
-<p class="lesson-subtitle">Зв'язуємо Entity і DAO разом</p>
+<p class="lesson-subtitle">Два файли: AppDatabase і DatabaseModule</p>
 
 <div class="section">
-  <h3>Повний приклад</h3>
+  <h3>Де лежать файли</h3>
+  <div class="codeblock">data/
+  db/
+    AppDatabase.kt       <span class="cm">← опис бази</span>
+    DatabaseModule.kt    <span class="cm">← як Hilt її створює</span></div>
+</div>
+
+<div class="section">
+  <h3>Файл 1 — AppDatabase.kt</h3>
+  <p>Тільки опис бази — які таблиці є і як дістати DAO. Більше нічого.</p>
   <div class="acode">
     <div class="acode-line"><div class="acode-src"><span class="an">@Database</span>(</div><div class="acode-note">← говоримо Room: це головний клас бази</div></div>
-    <div class="acode-line"><div class="acode-src">    entities = [<span class="tp">NoteEntity</span>::<span class="kw">class</span>],</div><div class="acode-note">← перерахуй всі Entity (таблиці) цієї БД</div></div>
-    <div class="acode-line hl"><div class="acode-src">    version = <span class="nm">1</span>,</div><div class="acode-note">← версія схеми. При зміні структури — збільшуй</div></div>
-    <div class="acode-line"><div class="acode-src">    exportSchema = <span class="kw">false</span></div><div class="acode-note">← не зберігати схему в файл (для простих проектів)</div></div>
+    <div class="acode-line"><div class="acode-src">    entities = [<span class="tp">HistoryEntity</span>::<span class="kw">class</span>],</div><div class="acode-note">← всі твої Entity через кому</div></div>
+    <div class="acode-line hl"><div class="acode-src">    version = <span class="nm">1</span>,</div><div class="acode-note">← при зміні структури збільшуй і пиши Migration</div></div>
+    <div class="acode-line"><div class="acode-src">    exportSchema = <span class="kw">false</span></div><div class="acode-note">← не зберігати схему в файл</div></div>
     <div class="acode-line"><div class="acode-src">)</div><div class="acode-note"></div></div>
-    <div class="acode-line"><div class="acode-src"><span class="kw">abstract class</span> <span class="tp">AppDatabase</span> : <span class="tp">RoomDatabase</span>() {</div><div class="acode-note">← abstract клас — Room генерує реалізацію</div></div>
-    <div class="acode-line"><div class="acode-src">    <span class="kw">abstract fun</span> <span class="fn">noteDao</span>(): <span class="tp">NoteDao</span></div><div class="acode-note">← через цю функцію отримуємо DAO</div></div>
-    <div class="acode-line" style="height:8px"><div class="acode-src"></div><div class="acode-note"></div></div>
-    <div class="acode-line"><div class="acode-src">    <span class="kw">companion object</span> {</div><div class="acode-note">← статичні поля/методи (як static в Java)</div></div>
-    <div class="acode-line"><div class="acode-src">        <span class="an">@Volatile</span></div><div class="acode-note">← всі потоки бачать останнє значення (thread-safe)</div></div>
-    <div class="acode-line"><div class="acode-src">        <span class="kw">private var</span> INSTANCE: <span class="tp">AppDatabase?</span> = <span class="kw">null</span></div><div class="acode-note">← єдиний екземпляр (Singleton)</div></div>
-    <div class="acode-line" style="height:8px"><div class="acode-src"></div><div class="acode-note"></div></div>
-    <div class="acode-line"><div class="acode-src">        <span class="kw">fun</span> <span class="fn">getInstance</span>(context: <span class="tp">Context</span>): <span class="tp">AppDatabase</span> {</div><div class="acode-note">← отримати або створити БД</div></div>
-    <div class="acode-line"><div class="acode-src">            <span class="kw">return</span> INSTANCE ?: synchronized(<span class="kw">this</span>) {</div><div class="acode-note">← якщо вже є — повернути, якщо нема — створити</div></div>
-    <div class="acode-line"><div class="acode-src">                Room.databaseBuilder(</div><div class="acode-note">← будуємо базу даних</div></div>
-    <div class="acode-line"><div class="acode-src">                    context.applicationContext,</div><div class="acode-note">← applicationContext щоб не витікала пам'ять</div></div>
-    <div class="acode-line"><div class="acode-src">                    <span class="tp">AppDatabase</span>::<span class="kw">class</span>.java,</div><div class="acode-note">← клас бази</div></div>
-    <div class="acode-line hl"><div class="acode-src">                    <span class="str">"app_database.db"</span></div><div class="acode-note">← ім'я файлу на диску телефону</div></div>
-    <div class="acode-line"><div class="acode-src">                ).build().also { INSTANCE = it }</div><div class="acode-note">← зберігаємо в INSTANCE і повертаємо</div></div>
-    <div class="acode-line"><div class="acode-src">            }</div><div class="acode-note"></div></div>
-    <div class="acode-line"><div class="acode-src">        }</div><div class="acode-note"></div></div>
-    <div class="acode-line"><div class="acode-src">    }</div><div class="acode-note"></div></div>
-    <div class="acode-line"><div class="acode-src">}</div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src"><span class="kw">abstract class</span> <span class="tp">AppDatabase</span> : <span class="tp">RoomDatabase</span>() {</div><div class="acode-note">← abstract — Room генерує реалізацію</div></div>
+    <div class="acode-line"><div class="acode-src">    <span class="kw">abstract fun</span> <span class="fn">historyDao</span>(): <span class="tp">HistoryDao</span></div><div class="acode-note">← через цю функцію отримуємо DAO</div></div>
+    <div class="acode-line"><div class="acode-src">}</div><div class="acode-note">← все, більше нічого не треба</div></div>
+  </div>
+  <div class="box box-green">
+    <div class="box-title">Кілька таблиць</div>
+    <p>Просто додаєш через кому:<br>
+    <code>entities = [HistoryEntity::class, CurrencyEntity::class]</code><br>
+    І додаєш нову abstract функцію для кожного DAO.</p>
   </div>
 </div>
 
 <div class="section">
-  <h3>Навіщо Singleton?</h3>
-  <div class="box box-yellow">
-    <div class="box-title">Чому не створювати нову БД кожного разу</div>
-    <p>Відкриття бази — дорога операція. Якщо кожен ViewModel буде створювати нову копію — додаток буде повільним і можуть бути конфлікти при одночасному записі. Singleton гарантує що є рівно одне підключення.</p>
-  </div>
-</div>
-
-<div class="section">
-  <h3>З Hilt (як у твоєму проекті)</h3>
-  <p>З Hilt не треба писати Singleton вручну — Hilt сам керує lifecycle:</p>
+  <h3>Файл 2 — DatabaseModule.kt</h3>
+  <p>Говориш Hilt як створити БД і DAO. Hilt сам передасть їх куди треба через <code>@Inject</code>.</p>
   <div class="acode">
-    <div class="acode-line"><div class="acode-src"><span class="an">@Module</span></div><div class="acode-note">← цей клас = постачальник залежностей</div></div>
+    <div class="acode-line"><div class="acode-src"><span class="an">@Module</span></div><div class="acode-note">← цей клас = постачальник залежностей для Hilt</div></div>
     <div class="acode-line"><div class="acode-src"><span class="an">@InstallIn</span>(<span class="tp">SingletonComponent</span>::<span class="kw">class</span>)</div><div class="acode-note">← живе стільки ж скільки весь додаток</div></div>
     <div class="acode-line"><div class="acode-src"><span class="kw">object</span> <span class="tp">DatabaseModule</span> {</div><div class="acode-note"></div></div>
-    <div class="acode-line"><div class="acode-src">    <span class="an">@Singleton</span></div><div class="acode-note">← один екземпляр на весь додаток</div></div>
-    <div class="acode-line"><div class="acode-src">    <span class="an">@Provides</span></div><div class="acode-note">← Hilt використає цю функцію щоб створити залежність</div></div>
-    <div class="acode-line"><div class="acode-src">    <span class="kw">fun</span> <span class="fn">provideDatabase</span>(<span class="an">@ApplicationContext</span> ctx: <span class="tp">Context</span>) =</div><div class="acode-note">← Hilt сам передасть context</div></div>
-    <div class="acode-line hl"><div class="acode-src">        Room.databaseBuilder(ctx, <span class="tp">AppDatabase</span>::<span class="kw">class</span>.java, <span class="str">"app.db"</span>).build()</div><div class="acode-note">← просто будуємо, Singleton вже забезпечив Hilt</div></div>
     <div class="acode-line" style="height:8px"><div class="acode-src"></div><div class="acode-note"></div></div>
-    <div class="acode-line"><div class="acode-src">    <span class="an">@Singleton</span> <span class="an">@Provides</span></div><div class="acode-note"></div></div>
-    <div class="acode-line"><div class="acode-src">    <span class="kw">fun</span> <span class="fn">provideNoteDao</span>(db: <span class="tp">AppDatabase</span>) = db.noteDao()</div><div class="acode-note">← окремо надаємо DAO щоб інжектити напряму</div></div>
+    <div class="acode-line"><div class="acode-src">    <span class="an">@Singleton</span></div><div class="acode-note">← один екземпляр на весь додаток</div></div>
+    <div class="acode-line"><div class="acode-src">    <span class="an">@Provides</span></div><div class="acode-note">← Hilt викличе цю функцію щоб створити AppDatabase</div></div>
+    <div class="acode-line"><div class="acode-src">    <span class="kw">fun</span> <span class="fn">provideDatabase</span>(<span class="an">@ApplicationContext</span> ctx: <span class="tp">Context</span>): <span class="tp">AppDatabase</span> =</div><div class="acode-note">← Hilt сам передасть context</div></div>
+    <div class="acode-line hl"><div class="acode-src">        Room.databaseBuilder(ctx, <span class="tp">AppDatabase</span>::<span class="kw">class</span>.java, <span class="str">"app.db"</span>).build()</div><div class="acode-note">← створюємо БД, ім'я файлу на диску</div></div>
+    <div class="acode-line" style="height:8px"><div class="acode-src"></div><div class="acode-note"></div></div>
+    <div class="acode-line"><div class="acode-src">    <span class="an">@Singleton</span></div><div class="acode-note">← DAO теж один екземпляр</div></div>
+    <div class="acode-line"><div class="acode-src">    <span class="an">@Provides</span></div><div class="acode-note">← Hilt викличе це щоб створити HistoryDao</div></div>
+    <div class="acode-line"><div class="acode-src">    <span class="kw">fun</span> <span class="fn">provideHistoryDao</span>(db: <span class="tp">AppDatabase</span>): <span class="tp">HistoryDao</span> = db.historyDao()</div><div class="acode-note">← Hilt сам передасть db зверху</div></div>
     <div class="acode-line"><div class="acode-src">}</div><div class="acode-note"></div></div>
   </div>
+  <div class="box box-yellow">
+    <div class="box-title">Кілька DAO</div>
+    <p>Для кожного DAO — окрема функція <code>@Provides</code>:<br>
+    <code>fun provideCurrencyDao(db: AppDatabase) = db.currencyDao()</code></p>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Як Hilt використовує це</h3>
+  <div class="arch">
+    <div class="arch-box blue">DatabaseModule<small>створює AppDatabase</small></div>
+    <div class="arch-arrow">→</div>
+    <div class="arch-box green">DatabaseModule<small>створює HistoryDao</small></div>
+    <div class="arch-arrow">→</div>
+    <div class="arch-box purple">Repository<small>@Inject отримує DAO</small></div>
+    <div class="arch-arrow">→</div>
+    <div class="arch-box yellow">ViewModel<small>@Inject отримує Repository</small></div>
+  </div>
+  <p>Ти тільки пишеш <code>@Inject constructor(val dao: HistoryDao)</code> в Repository — і Hilt сам все передає.</p>
 </div>
 `},
 
