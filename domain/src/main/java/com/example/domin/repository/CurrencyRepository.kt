@@ -1,5 +1,7 @@
 package com.example.domin.repository
 
-interface RateRepository {
-    suspend fun getPerToDollar(name1: String, name2: String): Pair<Double, Double>
+import com.example.domin.model.Currency
+
+interface CurrencyRepository{
+    suspend fun getCurrencyByCode(code: String): Currency
 }

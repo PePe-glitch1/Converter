@@ -1,10 +1,10 @@
 package com.example.domin.usecase
 
-import com.example.domin.repository.RateRepository
+import com.example.domin.repository.CurrencyRepository
 import javax.inject.Inject
 
 class ConvertRateUseCase @Inject constructor(
-    private val repository: RateRepository
+    private val repository: CurrencyRepository
 ) {
     suspend operator fun invoke(name1: String, name2: String): Double {
         val rates = repository.getPerToDollar(name1, name2)
