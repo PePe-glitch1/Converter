@@ -18,5 +18,5 @@ fun History.toHistoryEntity() = HistoryEntity(
     toCurrencyCode = toCurrencyCode,
     amount = amount,
     result = result,
-    createdAt = createdAt,
+    createdAt = createdAt?: System.currentTimeMillis(),
 )

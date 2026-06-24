@@ -6,5 +6,5 @@ data class History(
     val toCurrencyCode: String,
     val amount: Double,
     val result: Double,
-    val createdAt: Long,
+    val createdAt: Long?,
 )
