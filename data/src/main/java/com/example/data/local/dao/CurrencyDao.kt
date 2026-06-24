@@ -9,6 +9,6 @@ import kotlinx.coroutines.flow.Flow
 interface CurrencyDao {
 
      @Query("SELECT * FROM currency Where code = :code")
-     fun getAllCurrencies(code: String): Flow<CurrencyEntity>
+     fun getCurrencyByCode(code: String): Flow<CurrencyEntity>
 
 }

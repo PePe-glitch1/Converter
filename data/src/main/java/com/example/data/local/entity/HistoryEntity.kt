@@ -7,8 +7,8 @@ import androidx.room.PrimaryKey
 data class HistoryEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
-    val fromCurrencyId: Int,
-    val toCurrencyId: Int,
+    val fromCurrencyCode: String,
+    val toCurrencyCode: String,
     val amount: Double,
     val result: Double,
     val createdAt: Long = System.currentTimeMillis(),
