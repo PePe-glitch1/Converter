@@ -37,6 +37,9 @@ dependencies {
     ksp(libs.androidx.room.compiler)
     implementation(libs.androidx.room.ktx)
 
+    // Domain
+    implementation(project(":domain"))
+
     // Hilt
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
