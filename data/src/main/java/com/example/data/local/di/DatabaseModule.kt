@@ -1,15 +1,16 @@
-package com.example.data.local.database
+package com.example.data.local.di
 
+import android.content.Context
 import androidx.room.Room
+import com.example.data.local.dao.CurrencyDao
+import com.example.data.local.dao.HistoryDao
+import com.example.data.local.database.AppDatabase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
-import android.content.Context
-import com.example.data.local.dao.CurrencyDao
-import com.example.data.local.dao.HistoryDao
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
-import javax.inject.Singleton
+import jakarta.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
