@@ -16,6 +16,9 @@ ksp = "2.0.21-1.0.28"
 hilt = "2.59.2"
 javaxInject = "1"
 coroutines = "1.8.1"
+#Retrofit + OkHttp
+retrofit = "2.11.0"
+okhttp = "4.12.0"
 
 appcompat = "1.6.1"
 material = "1.10.0"
@@ -46,6 +49,10 @@ hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hilt"
 hilt-compiler = { module = "com.google.dagger:hilt-compiler", version.ref = "hilt" }
 javax-inject = { module = "javax.inject:javax.inject", version.ref = "javaxInject" }
 kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "coroutines" }
+#Retrofit + OkHttp
+retrofit = { group = "com.squareup.retrofit2", name = "retrofit" , version.ref = "retrofit" }
+retrofit-gson = { group = "com.squareup.retrofit2", name = "converter-gson", version.ref = "retrofit" }
+okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhttp" }
 
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
@@ -56,9 +63,9 @@ kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "ko
 
 #KSP
 kotlin-ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
-
 #Hilt
 hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
+
 
 android-library = { id = "com.android.library", version.ref = "agp" }
 jetbrains-kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "jetbrainsKotlinJvm" }
