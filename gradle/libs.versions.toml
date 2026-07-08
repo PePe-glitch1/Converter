@@ -11,7 +11,7 @@ composeBom = "2026.02.01"
 
 #Room
 room = "2.8.4"
-ksp = "2.0.21-1.0.28"
+ksp = "2.3.9"
 #Hilt
 hilt = "2.59.2"
 javaxInject = "1"
