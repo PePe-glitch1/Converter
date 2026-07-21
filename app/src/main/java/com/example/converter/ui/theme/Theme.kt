@@ -18,6 +18,7 @@ private val DarkColorScheme = darkColorScheme(
     onBackground = White,
     surface = InputBackground,
     onSurface = White,
+    surfaceVariant = InputBackground, //background for tests
     onSurfaceVariant = TextMuted,
 )
 
@@ -29,6 +30,7 @@ private val LightColorScheme = lightColorScheme(
     onBackground = White,
     surface = InputBackground,
     onSurface = White,
+    surfaceVariant = InputBackground, //background for tests
     onSurfaceVariant = TextMuted,
 )
 
@@ -36,7 +38,7 @@ private val LightColorScheme = lightColorScheme(
 fun ConverterTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     // Dynamic color is available on Android 12+
-    dynamicColor: Boolean = true,
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {
