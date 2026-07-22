@@ -7,7 +7,9 @@ import com.example.converter.ui.theme.ConverterTheme
 
 @Composable
 fun ConvertorCard(){
-    Column() { }
+    Column(
+
+    ) { }
 }
 
 @Preview(showBackground = true)
