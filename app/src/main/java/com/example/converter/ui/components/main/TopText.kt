@@ -23,7 +23,6 @@ fun TopText () {
         verticalArrangement = Arrangement.Center,
         modifier = Modifier
             .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.surfaceVariant)
     ) {
         Column() {
             Text(
