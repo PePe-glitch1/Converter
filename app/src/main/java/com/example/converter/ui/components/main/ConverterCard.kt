@@ -39,7 +39,7 @@ fun ConvertorCard(
             .border(
                 width = 1.5.dp,
                 color = MaterialTheme.colorScheme.primary,
-                shape = RoundedCornerShape(16.dp)
+                shape = RoundedCornerShape(21.dp)
             )
             .padding(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 8.dp)
     ) {
