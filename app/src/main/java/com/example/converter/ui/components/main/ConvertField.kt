@@ -24,9 +24,13 @@ import androidx.compose.ui.unit.dp
 import com.example.converter.ui.theme.ConverterTheme
 
 @Composable
-fun ConvertField() {
-    var inputValue by remember { mutableStateOf("-5") }
-    val codeValue by remember { mutableStateOf("USD") }
+fun ConvertField(
+    label: String,
+    value: String,
+    codeValue: String,
+) {
+    var inputValue by remember { mutableStateOf(value) }
+    val codeValue by remember { mutableStateOf(codeValue) }
     val isError = (inputValue.toLongOrNull() ?: 0) < 0
 
     Box {
@@ -88,6 +92,10 @@ fun ConvertField() {
 @Composable
 fun ShowConvertField(){
     ConverterTheme {
-        ConvertField()
+        ConvertField(
+            label = "1",
+            value = "5",
+            codeValue = "USD",
+        )
     }
 }
